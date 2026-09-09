@@ -493,7 +493,7 @@
 					{$t('home_supply_instructor_copy')}
 				</p>
 				<a
-					href={route('/signup')}
+					href={route('/instructors/join')}
 					class="bg-primary inline-flex rounded-md px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
 				>
 					{$t('home_supply_instructor_cta')}
