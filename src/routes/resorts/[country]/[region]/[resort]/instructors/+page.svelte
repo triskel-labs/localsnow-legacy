@@ -69,7 +69,9 @@
 		<div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 			<div class="flex items-center gap-1.5">
 				<MapPin class="h-4 w-4" />
-				<span>{location.region?.region || location.country.country}, {location.country.country}</span>
+				<span
+					>{location.region?.region || location.country.country}, {location.country.country}</span
+				>
 			</div>
 			{#if location.resort?.minElevation && location.resort?.maxElevation}
 				<div class="flex items-center gap-1.5">
@@ -102,7 +104,8 @@
 							{totalInstructors} Verified Instructor{totalInstructors === 1 ? '' : 's'}
 						</p>
 						<p class="text-sm text-muted-foreground">
-							Book directly with professional ski and snowboard instructors. No commission, no hidden fees.
+							Book directly with professional ski and snowboard instructors. No commission, no
+							hidden fees.
 						</p>
 					</div>
 				</div>
@@ -168,7 +171,9 @@
 					</li>
 					<li class="flex items-start gap-2">
 						<span class="text-primary">✓</span>
-						<span>Book directly with instructors - zero commission fees</span>
+						<span
+							>Send a self-managed inquiry or choose protected booking with LocalSnow support</span
+						>
 					</li>
 					<li class="flex items-start gap-2">
 						<span class="text-primary">✓</span>
@@ -189,7 +194,11 @@
 
 	<!-- Back to Resort Link -->
 	<div class="text-center">
-		<Button href="/resorts/{location.country.countrySlug}/{location.region?.regionSlug || location.country.countrySlug}/{location.resort?.slug}" variant="outline">
+		<Button
+			href="/resorts/{location.country.countrySlug}/{location.region?.regionSlug ||
+				location.country.countrySlug}/{location.resort?.slug}"
+			variant="outline"
+		>
 			← Back to {location.resort?.name} Overview
 		</Button>
 	</div>
