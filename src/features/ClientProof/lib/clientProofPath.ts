@@ -145,15 +145,6 @@ export function getHomepageTrustPaths(): HomepageTrustPaths {
 		subtitleKey: 'home_trust_paths_subtitle',
 		paths: [
 			{
-				kind: 'direct',
-				labelKey: 'home_trust_paths_direct_label',
-				priceSignal: 'free',
-				badgeKey: 'home_trust_paths_direct_badge',
-				copyKey: 'home_trust_paths_direct_copy',
-				clientPromiseKey: 'home_trust_paths_direct_promise',
-				humanOpsRequired: false
-			},
-			{
 				kind: 'protected',
 				labelKey: 'home_trust_paths_protected_label',
 				priceSignal: 'assisted',
@@ -161,6 +152,15 @@ export function getHomepageTrustPaths(): HomepageTrustPaths {
 				copyKey: 'home_trust_paths_protected_copy',
 				clientPromiseKey: 'home_trust_paths_protected_promise',
 				humanOpsRequired: true
+			},
+			{
+				kind: 'direct',
+				labelKey: 'home_trust_paths_direct_label',
+				priceSignal: 'free',
+				badgeKey: 'home_trust_paths_direct_badge',
+				copyKey: 'home_trust_paths_direct_copy',
+				clientPromiseKey: 'home_trust_paths_direct_promise',
+				humanOpsRequired: false
 			}
 		],
 		operatorTruthKey: 'home_trust_paths_operator_truth'
@@ -173,20 +173,20 @@ export function getHowItWorksTrustPaths(): HowItWorksTrustPaths {
 		subtitleKey: 'how_it_works_trust_paths_subtitle',
 		steps: [
 			{
-				kind: 'direct',
-				labelKey: 'how_it_works_trust_paths_direct_label',
-				badgeKey: 'how_it_works_trust_paths_direct_badge',
-				costSignal: 'free',
-				operatorRole: 'none',
-				clientCopyKey: 'how_it_works_trust_paths_direct_copy'
-			},
-			{
 				kind: 'protected',
 				labelKey: 'how_it_works_trust_paths_protected_label',
 				badgeKey: 'how_it_works_trust_paths_protected_badge',
 				costSignal: 'paid-support',
 				operatorRole: 'manual-support',
 				clientCopyKey: 'how_it_works_trust_paths_protected_copy'
+			},
+			{
+				kind: 'direct',
+				labelKey: 'how_it_works_trust_paths_direct_label',
+				badgeKey: 'how_it_works_trust_paths_direct_badge',
+				costSignal: 'free',
+				operatorRole: 'none',
+				clientCopyKey: 'how_it_works_trust_paths_direct_copy'
 			}
 		],
 		discoveryNoteKey: 'how_it_works_trust_paths_discovery_note'

@@ -312,9 +312,9 @@
 					<div class="mb-4 flex items-center justify-between gap-3">
 						<h3 class="text-xl font-semibold">{$t(path.labelKey)}</h3>
 						<span
-							class={path.kind === 'direct'
+							class={path.kind === 'protected'
 								? 'rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800'
-								: 'bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-semibold'}
+								: 'text-muted-foreground bg-muted rounded-full px-3 py-1 text-xs font-semibold'}
 						>
 							{$t(path.badgeKey)}
 						</span>
@@ -617,13 +617,19 @@
 	</p>
 	<div class="flex flex-col gap-4 sm:flex-row sm:justify-center">
 		<a
-			href={route('/instructors')}
+			href={route('/contact')}
 			class="bg-primary inline-block rounded-md px-8 py-3 font-semibold text-white shadow-sm transition-all hover:shadow-md"
+		>
+			{$t('home_cta_client_help')}
+		</a>
+		<a
+			href={route('/instructors')}
+			class="border-primary text-primary hover:bg-primary inline-block rounded-md border px-8 py-3 font-semibold shadow-sm transition-all hover:text-white"
 		>
 			{$t('home_cta_find_instructor')}
 		</a>
 		<a
-			href={route('/signup')}
+			href={route('/instructors/join')}
 			class="border-border bg-card inline-block rounded-md border px-8 py-3 font-semibold shadow-sm transition-all hover:shadow-md"
 		>
 			{$t('home_cta_list_instructor')}

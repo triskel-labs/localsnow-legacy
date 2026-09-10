@@ -143,9 +143,9 @@
 					<div class="mb-3 flex items-center justify-between gap-3">
 						<h3 class="title4 mb-0">{$t(step.labelKey)}</h3>
 						<span
-							class={step.costSignal === 'free'
+							class={step.kind === 'protected'
 								? 'rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800'
-								: 'bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-semibold'}
+								: 'text-muted-foreground bg-muted rounded-full px-3 py-1 text-xs font-semibold'}
 						>
 							{$t(step.badgeKey)}
 						</span>
