@@ -7,7 +7,7 @@
 	const PRIMARY_ORIGIN = 'https://localsnow.org';
 	const currentLocale = $derived((extractLocale(page.url.pathname).locale || 'en') as Locale);
 	const instructorsPath = $derived(route('/instructors', currentLocale));
-	const signupPath = $derived(route('/signup', currentLocale));
+	const providerJoinPath = $derived(route('/instructors/join', currentLocale));
 	const resortsBase = $derived(route('/resorts', currentLocale));
 	const spainResortsPath = $derived(`${resortsBase}/spain`);
 	const canonicalPath = $derived(route('/about', currentLocale));
@@ -131,7 +131,7 @@
 		<p>
 			{@html $t('about_contact_p1', {
 				values: {
-					createProfile: `<a href="${signupPath}">${$t('about_contact_create_profile')}</a>`,
+					createProfile: `<a href="${providerJoinPath}">${$t('about_contact_create_profile')}</a>`,
 					email: `<strong>${$t('about_contact_email')}</strong>`
 				}
 			})}
@@ -156,7 +156,7 @@
 				{$t('instructors_page_prompt_browse_spain')}
 			</a>
 			<a
-				href={signupPath}
+				href={providerJoinPath}
 				class="bg-primary inline-block rounded-md px-5 py-2.5 text-center font-medium text-white"
 			>
 				{$t('how_it_works_page_cta_list_instructor')}

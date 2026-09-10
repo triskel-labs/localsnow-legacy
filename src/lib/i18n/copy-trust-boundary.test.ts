@@ -105,6 +105,42 @@ describe('how-it-works instructor section copy trust boundary', () => {
 	});
 });
 
+describe('about page copy trust boundary', () => {
+	const aboutTrustKeys = [
+		'about_meta_description',
+		'about_economic_p3',
+		'about_what_is_p1',
+		'about_mission_text',
+		'about_how_different_text'
+	] as const;
+
+	it('about page copy does not use old free-directory / zero-commission promises', () => {
+		for (const locale of locales) {
+			const messages = readJson(`src/lib/i18n/translations/${locale}.json`);
+			for (const key of aboutTrustKeys) {
+				const value = messages[key];
+				expect(value, `${locale}:${key} must exist`).toBeTruthy();
+				expect(value, `${locale}:${key} must not use old zero-commission framing`).not.toMatch(
+					OLD_MODEL_PATTERN
+				);
+			}
+		}
+	});
+
+	it('about page states the honest free inquiry plus protected booking model', () => {
+		const en = readJson('src/lib/i18n/translations/en.json');
+		expect(en['about_what_is_p1']).toMatch(/self-managed inquiries/i);
+		expect(en['about_what_is_p1']).toMatch(/protected booking/i);
+		expect(en['about_economic_p3']).toMatch(/fair commission/i);
+	});
+
+	it('about page sends provider profile CTAs through the join explainer first', () => {
+		const page = readText('src/routes/about/+page.svelte');
+		expect(page).toMatch(/route\('\/instructors\/join'/);
+		expect(page).not.toMatch(/route\('\/signup'/);
+	});
+});
+
 describe('resort instructors page hardcoded copy trust boundary', () => {
 	it('does not contain "zero commission fees" as a public benefit claim', () => {
 		const page = readText(
