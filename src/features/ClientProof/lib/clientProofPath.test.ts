@@ -126,18 +126,18 @@ describe('clientProofPath', () => {
 			subtitleKey: 'home_trust_paths_subtitle',
 			operatorTruthKey: 'home_trust_paths_operator_truth'
 		});
-		expect(trustPaths.paths.map((path) => path.kind)).toEqual(['direct', 'protected']);
+		expect(trustPaths.paths.map((path) => path.kind)).toEqual(['protected', 'direct']);
 		expect(trustPaths.paths[0]).toMatchObject({
-			kind: 'direct',
-			labelKey: 'home_trust_paths_direct_label',
-			priceSignal: 'free',
-			humanOpsRequired: false
-		});
-		expect(trustPaths.paths[1]).toMatchObject({
 			kind: 'protected',
 			labelKey: 'home_trust_paths_protected_label',
 			priceSignal: 'assisted',
 			humanOpsRequired: true
+		});
+		expect(trustPaths.paths[1]).toMatchObject({
+			kind: 'direct',
+			labelKey: 'home_trust_paths_direct_label',
+			priceSignal: 'free',
+			humanOpsRequired: false
 		});
 		expect(trustPaths).not.toHaveProperty('headline');
 		expect(trustPaths.paths[1]).not.toHaveProperty('copy');
@@ -151,18 +151,18 @@ describe('clientProofPath', () => {
 			subtitleKey: 'how_it_works_trust_paths_subtitle',
 			discoveryNoteKey: 'how_it_works_trust_paths_discovery_note'
 		});
-		expect(trustPaths.steps.map((step) => step.kind)).toEqual(['direct', 'protected']);
+		expect(trustPaths.steps.map((step) => step.kind)).toEqual(['protected', 'direct']);
 		expect(trustPaths.steps[0]).toMatchObject({
-			kind: 'direct',
-			labelKey: 'how_it_works_trust_paths_direct_label',
-			costSignal: 'free',
-			operatorRole: 'none'
-		});
-		expect(trustPaths.steps[1]).toMatchObject({
 			kind: 'protected',
 			labelKey: 'how_it_works_trust_paths_protected_label',
 			costSignal: 'paid-support',
 			operatorRole: 'manual-support'
+		});
+		expect(trustPaths.steps[1]).toMatchObject({
+			kind: 'direct',
+			labelKey: 'how_it_works_trust_paths_direct_label',
+			costSignal: 'free',
+			operatorRole: 'none'
 		});
 		expect(trustPaths).not.toHaveProperty('heading');
 		expect(trustPaths.steps[1]).not.toHaveProperty('clientCopy');

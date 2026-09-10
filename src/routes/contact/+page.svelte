@@ -203,6 +203,12 @@
 			{$t('contact_page_find_button')}
 		</a>
 		<a
+			href="mailto:{contactEmail}"
+			class="bg-primary hover:bg-primary/90 mt-3 ml-0 inline-block rounded-md px-6 py-3 font-medium text-white sm:mt-0 sm:ml-3"
+		>
+			{$t('contact_page_client_help_button')}
+		</a>
+		<a
 			href={spainResortsPath}
 			class="border-border bg-card hover:bg-muted mt-3 ml-0 inline-block rounded-md border px-6 py-3 font-medium sm:mt-0 sm:ml-3"
 		>

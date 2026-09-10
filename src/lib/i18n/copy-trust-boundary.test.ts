@@ -26,13 +26,49 @@ const readJson = (path: string) =>
 const readText = (path: string) => readFileSync(join(root, path), 'utf8');
 
 const OLD_MODEL_PATTERN =
-	/zero commission|0% commission|no commission|keep 100%|free forever|no booking fee|no hidden charges|community-first directory/i;
+	/zero commission|0% commission|no commission|sin comisiones|sin comisión|keep 100%|quédate con el 100%|free forever|no booking fee|no hidden charges|community-first directory|100% free directory/i;
+
+const PUBLIC_OPS_LEAK_PATTERN =
+	/manual(?:ly)? operated|handled manually|manually supported|manual operations|before automation|deeper automation|software-driven fulfillment|cumplimiento automático|opera manualmente|gestiona manualmente|soporte manual|antes de automatizar|automatizar más/i;
 
 const REQUIRED_HONEST_PATTERN =
 	/self.managed inquiry|protected booking|guaranteed booking|commission|fair/i;
 
 const targetFaqKeys = ['home_faq_a2', 'home_faq_a10'] as const;
 const targetSchemaKeys = ['home_schema_website_description'] as const;
+const clientAssistanceKeys = [
+	'seo_meta_home_description',
+	'seo_meta_instructors_description',
+	'seo_meta_how_it_works_description',
+	'home_how_it_works_step2_desc',
+	'home_how_it_works_step3_desc',
+	'home_trust_paths_headline',
+	'home_trust_paths_subtitle',
+	'home_trust_paths_direct_copy',
+	'home_trust_paths_direct_promise',
+	'home_trust_paths_protected_copy',
+	'home_trust_paths_protected_promise',
+	'home_trust_paths_operator_truth',
+	'home_supply_subtitle',
+	'home_supply_instructor_copy',
+	'home_cta_subtitle',
+	'home_why_free_commitment_desc',
+	'contact_page_clients_desc',
+	'contact_page_support_desc',
+	'client_path_protected_safeguard',
+	'how_it_works_page_intro',
+	'how_it_works_page_clients_step3_note',
+	'how_it_works_page_clients_step5_desc',
+	'how_it_works_page_faq_deposit_a',
+	'how_it_works_page_faq_payments_a',
+	'how_it_works_page_faq_no_response_a',
+	'how_it_works_trust_paths_direct_copy',
+	'how_it_works_trust_paths_protected_copy',
+	'how_it_works_trust_paths_discovery_note',
+	'how_works_free_forever_desc',
+	'about_what_is_p1',
+	'about_how_different_text'
+] as const;
 const locales = ['en', 'es'] as const;
 
 describe('homepage FAQ + schema copy trust boundary', () => {
@@ -73,6 +109,29 @@ describe('homepage FAQ + schema copy trust boundary', () => {
 		const en = readJson('src/lib/i18n/translations/en.json');
 		const value = en['home_faq_a10'];
 		expect(value).toMatch(REQUIRED_HONEST_PATTERN);
+	});
+});
+
+describe('public client assistance copy', () => {
+	it('does not leak manual backend or automation maturity language', () => {
+		for (const locale of locales) {
+			const messages = readJson(`src/lib/i18n/translations/${locale}.json`);
+			for (const key of clientAssistanceKeys) {
+				const value = messages[key];
+				expect(value, `${locale}:${key} must exist`).toBeTruthy();
+				expect(value, `${locale}:${key} must sound like a working platform`).not.toMatch(
+					PUBLIC_OPS_LEAK_PATTERN
+				);
+			}
+		}
+	});
+
+	it('makes guaranteed booking the benefit-led path, not just support tasks', () => {
+		const en = readJson('src/lib/i18n/translations/en.json');
+		expect(en['home_trust_paths_protected_copy']).toMatch(/lesson solved|secure a suitable/i);
+		expect(en['home_trust_paths_protected_promise']).toMatch(/suitable lesson.*refund/i);
+		expect(en['how_it_works_trust_paths_protected_copy']).toMatch(/know-how|trusted network/i);
+		expect(en['home_trust_paths_direct_copy']).toMatch(/coordinate.*yourself/i);
 	});
 });
 
@@ -130,7 +189,7 @@ describe('about page copy trust boundary', () => {
 	it('about page states the honest free inquiry plus protected booking model', () => {
 		const en = readJson('src/lib/i18n/translations/en.json');
 		expect(en['about_what_is_p1']).toMatch(/self-managed inquiries/i);
-		expect(en['about_what_is_p1']).toMatch(/protected booking/i);
+		expect(en['about_what_is_p1']).toMatch(/guaranteed booking|protected booking/i);
 		expect(en['about_economic_p3']).toMatch(/fair commission/i);
 	});
 
