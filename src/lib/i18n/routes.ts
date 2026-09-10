@@ -38,6 +38,10 @@ export const routeTranslations = {
 		en: '/contact',
 		es: '/contacto'
 	},
+	'/secure-lesson': {
+		en: '/secure-lesson',
+		es: '/asegurar-clase'
+	},
 
 	// Instructors
 	'/instructors': {
