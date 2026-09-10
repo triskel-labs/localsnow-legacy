@@ -133,6 +133,16 @@ describe('public client assistance copy', () => {
 		expect(en['how_it_works_trust_paths_protected_copy']).toMatch(/know-how|trusted network/i);
 		expect(en['home_trust_paths_direct_copy']).toMatch(/coordinate.*yourself/i);
 	});
+
+	it('uses the positive green badge on guaranteed booking, not the free path', () => {
+		const homepage = readText('src/routes/+page.svelte');
+		const howItWorks = readText('src/routes/how-it-works/+page.svelte');
+
+		expect(homepage).toContain("path.kind === 'protected'");
+		expect(homepage).not.toContain("path.kind === 'direct'\n								? 'rounded-full bg-green-100");
+		expect(howItWorks).toContain("step.kind === 'protected'");
+		expect(howItWorks).not.toContain("step.costSignal === 'free'\n								? 'rounded-full bg-green-100");
+	});
 });
 
 describe('how-it-works instructor section copy trust boundary', () => {
