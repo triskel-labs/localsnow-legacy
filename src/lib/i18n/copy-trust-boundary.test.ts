@@ -76,6 +76,35 @@ describe('homepage FAQ + schema copy trust boundary', () => {
 	});
 });
 
+describe('how-it-works instructor section copy trust boundary', () => {
+	const liveHiwDriftKeys = [
+		'how_it_works_page_instructors_step6_desc',
+		'how_it_works_page_instructors_step6_note',
+		'how_it_works_page_instructors_cost_no_commission',
+		'how_it_works_page_difference_localsnow_item1'
+	] as const;
+
+	it('instructor step 6 and cost summary do not use old zero-commission framing', () => {
+		for (const locale of locales) {
+			const messages = readJson(`src/lib/i18n/translations/${locale}.json`);
+			for (const key of liveHiwDriftKeys) {
+				const value = messages[key];
+				expect(value, `${locale}:${key} must exist`).toBeTruthy();
+				expect(value, `${locale}:${key} must not use old zero-commission framing`).not.toMatch(
+					OLD_MODEL_PATTERN
+				);
+			}
+		}
+	});
+
+	it('instructor cost summary positively mentions the honest commission model', () => {
+		const en = readJson('src/lib/i18n/translations/en.json');
+		const costKey = en['how_it_works_page_instructors_cost_no_commission'];
+		expect(costKey).toMatch(/commission|inquiry|booking/i);
+		expect(costKey).not.toMatch(/keep 100%|no commission/i);
+	});
+});
+
 describe('resort instructors page hardcoded copy trust boundary', () => {
 	it('does not contain "zero commission fees" as a public benefit claim', () => {
 		const page = readText(
