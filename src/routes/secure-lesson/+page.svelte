@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { t } from '$lib/i18n/i18n';
 	import { getAlternateUrls, route } from '$lib/i18n/routeHelpers';
+	import { CalendarGrid } from '$src/lib/components/calendar-grid';
 	import { extractLocale, type Locale } from '$lib/i18n/routes';
 	import {
 		LESSON_HELP_WHATSAPP_DISPLAY,
@@ -25,6 +26,14 @@
 
 	const values = $derived(form?.values ?? {});
 	const fieldErrors = $derived(form && 'fieldErrors' in form ? form.fieldErrors : {});
+	let selectedPreferredDates = $state<string[]>([]);
+
+	$effect(() => {
+		selectedPreferredDates = String(values.preferredDates ?? '')
+			.split(',')
+			.map((date) => date.trim())
+			.filter(Boolean);
+	});
 
 	const valueOf = (field: string) => values[field] ?? '';
 	const errorOf = (field: string) => fieldErrors?.[field];
@@ -144,6 +153,43 @@
 				>{/if}
 			</label>
 		</div>
+
+		<section class="not-prose rounded-lg border bg-card p-4">
+			<div class="mb-4 space-y-1">
+				<h2 class="text-base font-semibold">{$t('lesson_help_preferred_dates_title')}</h2>
+				<p class="text-sm text-muted-foreground">{$t('lesson_help_preferred_dates_copy')}</p>
+			</div>
+			<input type="hidden" name="preferredDates" value={selectedPreferredDates.join(',')} />
+			<CalendarGrid type="multiple" bind:selected={selectedPreferredDates} disablePast class="mx-auto max-w-md" />
+			{#if selectedPreferredDates.length > 0}
+				<p class="mt-3 text-xs text-muted-foreground">
+					{$t('lesson_help_preferred_dates_selected')}: {selectedPreferredDates.join(', ')}
+				</p>
+			{/if}
+			<label class="mt-4 block text-sm font-semibold">
+				{$t('lesson_help_time_window_label')}
+				<select
+					name="preferredTimeWindow"
+					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				>
+					<option value="" selected={valueOf('preferredTimeWindow') === ''}
+						>{$t('lesson_help_time_window_not_sure')}</option
+					>
+					<option value="morning" selected={valueOf('preferredTimeWindow') === 'morning'}
+						>{$t('lesson_help_time_window_morning')}</option
+					>
+					<option value="midday" selected={valueOf('preferredTimeWindow') === 'midday'}
+						>{$t('lesson_help_time_window_midday')}</option
+					>
+					<option value="afternoon" selected={valueOf('preferredTimeWindow') === 'afternoon'}
+						>{$t('lesson_help_time_window_afternoon')}</option
+					>
+					<option value="flexible" selected={valueOf('preferredTimeWindow') === 'flexible'}
+						>{$t('lesson_help_time_window_flexible')}</option
+					>
+				</select>
+			</label>
+		</section>
 
 		<div class="grid gap-4 sm:grid-cols-2">
 			<label class="block text-sm font-semibold">

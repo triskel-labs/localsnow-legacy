@@ -21,7 +21,10 @@ const requiredKeys = [
 	'lesson_help_success_copy',
 	'lesson_help_direct_path_label',
 	'lesson_help_guaranteed_path_label',
-	'lesson_help_guaranteed_path_copy'
+	'lesson_help_guaranteed_path_copy',
+	'lesson_help_preferred_dates_title',
+	'lesson_help_preferred_dates_copy',
+	'lesson_help_time_window_label'
 ];
 
 describe('lesson help page copy and routing', () => {
@@ -33,7 +36,7 @@ describe('lesson help page copy and routing', () => {
 
 		expect(routes).toContain("'/secure-lesson'");
 		expect(routes).toContain("en: '/secure-lesson'");
-		expect(routes).toContain("es: '/ayuda'");
+		expect(routes).toContain("es: '/asegurar-clase'");
 		expect(homepage).toContain("route('/secure-lesson')");
 		expect(homepage).toContain('home_trust_paths_operator_cta');
 		expect(contact).toContain("route('/secure-lesson', currentLocale)");
@@ -55,6 +58,7 @@ describe('lesson help page copy and routing', () => {
 				/secure|suitable|lesson|alternative|refund|asegurar|clase|alternativa|reembolso/i
 			);
 			expect(copy).toMatch(/guaranteed|garantizada/i);
+			expect(copy).toMatch(/not a confirmed booking|no son una reserva confirmada/i);
 			expect(copy).not.toMatch(/ask localsnow to help|pedir ayuda a localsnow/i);
 			expect(copy).not.toMatch(
 				/manual|automation|backend|still figuring|opera manual|automatización/i

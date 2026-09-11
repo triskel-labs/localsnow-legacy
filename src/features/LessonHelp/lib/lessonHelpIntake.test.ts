@@ -19,6 +19,8 @@ function makeForm(overrides: Record<string, string> = {}) {
 		level: 'beginner',
 		groupSize: '3',
 		lessonPreference: 'private',
+		preferredDates: '2026-01-10,2026-01-11',
+		preferredTimeWindow: 'morning',
 		language: 'Spanish',
 		message: 'Two adults and one child, morning preferred.',
 		...overrides
@@ -44,6 +46,8 @@ describe('lesson help intake', () => {
 			phone: '+34 600 000 000',
 			resort: 'Baqueira Beret',
 			dates: '10-12 January',
+			preferredDates: '2026-01-10,2026-01-11',
+			preferredTimeWindow: 'morning',
 			sport: 'ski',
 			level: 'beginner',
 			groupSize: 3,
@@ -79,6 +83,10 @@ describe('lesson help intake', () => {
 		expect(notification.to).toBe('admin@localsnow.org');
 		expect(combined).toContain('Baqueira Beret');
 		expect(combined).toContain('10-12 January');
+		expect(combined).toContain('2026-01-10,2026-01-11');
+		expect(combined).toContain('morning');
+		expect(combined).toContain('preferred');
+		expect(combined).not.toMatch(/confirmed|booked|guaranteed slot/i);
 		expect(combined).toContain('3');
 		expect(combined).not.toMatch(/manual|automation|backend|still figuring/i);
 	});

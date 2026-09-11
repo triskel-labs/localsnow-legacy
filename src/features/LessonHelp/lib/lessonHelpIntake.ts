@@ -20,6 +20,10 @@ const lessonHelpSchema = z.object({
 	level: z.string().trim().min(1, 'Level is required'),
 	groupSize: z.coerce.number().int('Group size must be a whole number').min(1).max(30),
 	lessonPreference: z.enum(['private', 'group', 'either', 'not_sure']),
+	preferredDates: z.string().trim().max(300).optional(),
+	preferredTimeWindow: z
+		.enum(['morning', 'midday', 'afternoon', 'flexible', 'not_sure', ''])
+		.optional(),
 	language: z.string().trim().min(1, 'Preferred language is required'),
 	message: z.string().trim().max(1200).optional()
 });
@@ -51,6 +55,8 @@ const fields = [
 	'level',
 	'groupSize',
 	'lessonPreference',
+	'preferredDates',
+	'preferredTimeWindow',
 	'language',
 	'message'
 ] as const;
@@ -101,6 +107,8 @@ export function buildLessonHelpNotification(
 		['Phone', request.phone || 'Not provided'],
 		['Resort / area', request.resort],
 		['Dates', request.dates],
+		['Preferred date picks', request.preferredDates || 'Not selected'],
+		['Estimated time window', request.preferredTimeWindow || 'Not sure'],
 		['Sport', request.sport],
 		['Level', request.level],
 		['Group size', String(request.groupSize)],
@@ -138,6 +146,8 @@ export function buildLessonHelpNotification(
 		`- Phone: ${request.phone || 'Not provided'}`,
 		`- Resort: ${request.resort}`,
 		`- Dates: ${request.dates}`,
+		`- Preferred date picks: ${request.preferredDates || 'Not selected'}`,
+		`- Estimated time window: ${request.preferredTimeWindow || 'Not sure'}`,
 		`- Sport: ${request.sport}`,
 		`- Level: ${request.level}`,
 		`- Group size: ${request.groupSize}`,
