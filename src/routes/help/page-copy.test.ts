@@ -45,7 +45,8 @@ describe('help/contact intent router', () => {
 		expect(routes).toContain("'/secure-lesson'");
 		expect(routes).toContain("es: '/asegurar-clase'");
 		expect(helpPage).toContain("route('/secure-lesson', currentLocale)");
-		expect(helpPage).toContain("route('/contact', currentLocale)");
+		expect(helpPage).toContain('LESSON_HELP_WHATSAPP_URL');
+		expect(helpPage).toContain('mailto:{contactEmail}');
 		expect(footer).toContain("$t('nav_help')");
 		expect(footer).toContain("route('/help')");
 	});

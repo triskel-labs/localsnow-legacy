@@ -53,225 +53,193 @@
 		</p>
 	</header>
 
-	<section class="mb-8 grid gap-4 md:grid-cols-2">
-		<article class="border-border bg-card rounded-lg border p-5 shadow-sm">
-			<p class="text-sm font-semibold">{$t('lesson_help_direct_path_label')}</p>
-			<p class="text-muted-foreground mt-2 text-sm leading-6">
-				{$t('lesson_help_direct_path_copy')}
-			</p>
-		</article>
-		<article class="rounded-lg border border-green-200 bg-green-50 p-5 shadow-sm">
-			<p class="text-sm font-semibold text-green-900">{$t('lesson_help_guaranteed_path_label')}</p>
-			<p class="mt-2 text-sm leading-6 text-green-950/80">
-				{$t('lesson_help_guaranteed_path_copy')}
-			</p>
-		</article>
-	</section>
-
-	<section class="border-border bg-card my-8 rounded-lg border p-6 shadow-sm">
-		<div class="mb-6">
-			<h2 class="title3 mb-2">{$t('lesson_help_form_title')}</h2>
-			<p class="text-muted-foreground text-sm leading-6">{$t('lesson_help_form_intro')}</p>
+	{#if form?.success}
+		<div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-950">
+			<h2 class="text-lg font-bold">{$t('lesson_help_success_title')}</h2>
+			<p class="mt-2 text-sm leading-6">{$t('lesson_help_success_copy')}</p>
 		</div>
+	{/if}
 
-		{#if form?.success}
-			<div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-950">
-				<h2 class="text-lg font-bold">{$t('lesson_help_success_title')}</h2>
-				<p class="mt-2 text-sm leading-6">{$t('lesson_help_success_copy')}</p>
-			</div>
-		{/if}
+	{#if form?.message && !form?.success}
+		<div class="mb-6 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+			{$t(form.message)}
+		</div>
+	{/if}
 
-		{#if form?.message && !form?.success}
-			<div class="mb-6 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
-				{$t(form.message)}
-			</div>
-		{/if}
-
-		<form method="POST" class="space-y-5">
-			<input type="text" name="company" class="hidden" tabindex="-1" autocomplete="off" />
-
-			<div class="grid gap-4 sm:grid-cols-2">
-				<label class="block text-sm font-semibold">
-					{$t('lesson_help_name_label')}
-					<input
-						name="name"
-						value={valueOf('name')}
-						required
-						class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-					/>
-					{#if errorOf('name')}<span class="mt-1 block text-xs text-rose-700"
-							>{errorOf('name')}</span
-						>{/if}
-				</label>
-				<label class="block text-sm font-semibold">
-					{$t('lesson_help_email_label')}
-					<input
-						name="email"
-						type="email"
-						value={valueOf('email')}
-						required
-						class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-					/>
-					{#if errorOf('email')}<span class="mt-1 block text-xs text-rose-700"
-							>{errorOf('email')}</span
-						>{/if}
-				</label>
-			</div>
-
-			<label class="block text-sm font-semibold">
-				{$t('lesson_help_phone_label')}
-				<input
-					name="phone"
-					value={valueOf('phone')}
-					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-				/>
-			</label>
-
-			<div class="grid gap-4 sm:grid-cols-2">
-				<label class="block text-sm font-semibold">
-					{$t('lesson_help_resort_label')}
-					<input
-						name="resort"
-						value={valueOf('resort')}
-						required
-						class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-					/>
-					{#if errorOf('resort')}<span class="mt-1 block text-xs text-rose-700"
-							>{errorOf('resort')}</span
-						>{/if}
-				</label>
-				<label class="block text-sm font-semibold">
-					{$t('lesson_help_dates_label')}
-					<input
-						name="dates"
-						value={valueOf('dates')}
-						required
-						class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-					/>
-					{#if errorOf('dates')}<span class="mt-1 block text-xs text-rose-700"
-							>{errorOf('dates')}</span
-						>{/if}
-				</label>
-			</div>
-
-			<div class="grid gap-4 sm:grid-cols-2">
-				<label class="block text-sm font-semibold">
-					{$t('lesson_help_sport_label')}
-					<select
-						name="sport"
-						class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-					>
-						<option value="ski" selected={valueOf('sport') === 'ski'}
-							>{$t('lesson_help_sport_ski')}</option
-						>
-						<option value="snowboard" selected={valueOf('sport') === 'snowboard'}
-							>{$t('lesson_help_sport_snowboard')}</option
-						>
-						<option value="both" selected={valueOf('sport') === 'both'}
-							>{$t('lesson_help_sport_both')}</option
-						>
-						<option value="not_sure" selected={valueOf('sport') === 'not_sure'}
-							>{$t('lesson_help_not_sure')}</option
-						>
-					</select>
-				</label>
-				<label class="block text-sm font-semibold">
-					{$t('lesson_help_level_label')}
-					<input
-						name="level"
-						value={valueOf('level')}
-						required
-						class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-					/>
-				</label>
-			</div>
-
-			<div class="grid gap-4 sm:grid-cols-2">
-				<label class="block text-sm font-semibold">
-					{$t('lesson_help_group_size_label')}
-					<input
-						name="groupSize"
-						type="number"
-						min="1"
-						max="30"
-						value={valueOf('groupSize') || '1'}
-						required
-						class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-					/>
-					{#if errorOf('groupSize')}<span class="mt-1 block text-xs text-rose-700"
-							>{errorOf('groupSize')}</span
-						>{/if}
-				</label>
-				<label class="block text-sm font-semibold">
-					{$t('lesson_help_preference_label')}
-					<select
-						name="lessonPreference"
-						class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-					>
-						<option value="private" selected={valueOf('lessonPreference') === 'private'}
-							>{$t('lesson_help_preference_private')}</option
-						>
-						<option value="group" selected={valueOf('lessonPreference') === 'group'}
-							>{$t('lesson_help_preference_group')}</option
-						>
-						<option value="either" selected={valueOf('lessonPreference') === 'either'}
-							>{$t('lesson_help_preference_either')}</option
-						>
-						<option value="not_sure" selected={valueOf('lessonPreference') === 'not_sure'}
-							>{$t('lesson_help_not_sure')}</option
-						>
-					</select>
-				</label>
-			</div>
-
-			<label class="block text-sm font-semibold">
-				{$t('lesson_help_language_label')}
-				<input
-					name="language"
-					value={valueOf('language')}
-					required
-					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-				/>
-			</label>
-
-			<label class="block text-sm font-semibold">
-				{$t('lesson_help_message_label')}
-				<textarea
-					name="message"
-					rows="4"
-					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
-					>{valueOf('message')}</textarea
-				>
-			</label>
-
-			<button
-				type="submit"
-				class="bg-primary hover:bg-primary/90 w-full rounded-md px-5 py-3 text-sm font-bold text-white shadow-sm transition"
-			>
-				{$t('lesson_help_submit')}
-			</button>
-		</form>
-	</section>
-
-	<section class="border-border bg-card my-8 rounded-lg border p-6 shadow-sm">
-		<h2 class="title3 mb-2">{$t('lesson_help_whatsapp_title')}</h2>
-		<p class="text-muted-foreground mb-4 text-sm leading-6">
-			{$t('lesson_help_whatsapp_note', { values: { phone: LESSON_HELP_WHATSAPP_DISPLAY } })}
-		</p>
+	<p class="text-muted-foreground mb-4 text-sm">
+		{$t('lesson_help_contact_intro')}
 		<a
 			href={LESSON_HELP_WHATSAPP_URL}
 			target="_blank"
 			rel="noreferrer"
-			class="inline-flex rounded-md bg-green-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-500"
+			class="font-semibold text-green-700 hover:underline"
 		>
 			{$t('lesson_help_whatsapp_cta')}
 		</a>
-	</section>
+	</p>
 
-	<a
-		href={instructorsPath}
-		class="text-muted-foreground block text-center text-sm font-semibold underline"
-	>
-		{$t('lesson_help_browse_instead')}
-	</a>
+	<form method="POST" class="space-y-5">
+		<input type="text" name="company" class="hidden" tabindex="-1" autocomplete="off" />
+
+		<div class="grid gap-4 sm:grid-cols-2">
+			<label class="block text-sm font-semibold">
+				{$t('lesson_help_name_label')}
+				<input
+					name="name"
+					value={valueOf('name')}
+					required
+					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				/>
+				{#if errorOf('name')}<span class="mt-1 block text-xs text-rose-700"
+					>{errorOf('name')}</span
+				>{/if}
+			</label>
+			<label class="block text-sm font-semibold">
+				{$t('lesson_help_email_label')}
+				<input
+					name="email"
+					type="email"
+					value={valueOf('email')}
+					required
+					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				/>
+				{#if errorOf('email')}<span class="mt-1 block text-xs text-rose-700"
+					>{errorOf('email')}</span
+				>{/if}
+			</label>
+		</div>
+
+		<label class="block text-sm font-semibold">
+			{$t('lesson_help_phone_label')}
+			<input
+				name="phone"
+				value={valueOf('phone')}
+				class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+			/>
+		</label>
+
+		<div class="grid gap-4 sm:grid-cols-2">
+			<label class="block text-sm font-semibold">
+				{$t('lesson_help_resort_label')}
+				<input
+					name="resort"
+					value={valueOf('resort')}
+					required
+					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				/>
+				{#if errorOf('resort')}<span class="mt-1 block text-xs text-rose-700"
+					>{errorOf('resort')}</span
+				>{/if}
+			</label>
+			<label class="block text-sm font-semibold">
+				{$t('lesson_help_dates_label')}
+				<input
+					name="dates"
+					value={valueOf('dates')}
+					required
+					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				/>
+				{#if errorOf('dates')}<span class="mt-1 block text-xs text-rose-700"
+					>{errorOf('dates')}</span
+				>{/if}
+			</label>
+		</div>
+
+		<div class="grid gap-4 sm:grid-cols-2">
+			<label class="block text-sm font-semibold">
+				{$t('lesson_help_sport_label')}
+				<select
+					name="sport"
+					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				>
+					<option value="ski" selected={valueOf('sport') === 'ski'}
+						>{$t('lesson_help_sport_ski')}</option
+					>
+					<option value="snowboard" selected={valueOf('sport') === 'snowboard'}
+						>{$t('lesson_help_sport_snowboard')}</option
+					>
+					<option value="both" selected={valueOf('sport') === 'both'}
+						>{$t('lesson_help_sport_both')}</option
+					>
+					<option value="not_sure" selected={valueOf('sport') === 'not_sure'}
+						>{$t('lesson_help_not_sure')}</option
+					>
+				</select>
+			</label>
+			<label class="block text-sm font-semibold">
+				{$t('lesson_help_level_label')}
+				<input
+					name="level"
+					value={valueOf('level')}
+					required
+					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				/>
+			</label>
+		</div>
+
+		<div class="grid gap-4 sm:grid-cols-2">
+			<label class="block text-sm font-semibold">
+				{$t('lesson_help_group_size_label')}
+				<input
+					name="groupSize"
+					type="number"
+					min="1"
+					max="30"
+					value={valueOf('groupSize') || '1'}
+					required
+					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				/>
+				{#if errorOf('groupSize')}<span class="mt-1 block text-xs text-rose-700"
+					>{errorOf('groupSize')}</span
+				>{/if}
+			</label>
+			<label class="block text-sm font-semibold">
+				{$t('lesson_help_preference_label')}
+				<select
+					name="lessonPreference"
+					class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				>
+					<option value="private" selected={valueOf('lessonPreference') === 'private'}
+						>{$t('lesson_help_preference_private')}</option
+					>
+					<option value="group" selected={valueOf('lessonPreference') === 'group'}
+						>{$t('lesson_help_preference_group')}</option
+					>
+					<option value="either" selected={valueOf('lessonPreference') === 'either'}
+						>{$t('lesson_help_preference_either')}</option
+					>
+					<option value="not_sure" selected={valueOf('lessonPreference') === 'not_sure'}
+						>{$t('lesson_help_not_sure')}</option
+					>
+				</select>
+			</label>
+		</div>
+
+		<label class="block text-sm font-semibold">
+			{$t('lesson_help_language_label')}
+			<input
+				name="language"
+				value={valueOf('language')}
+				required
+				class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+			/>
+		</label>
+
+		<label class="block text-sm font-semibold">
+			{$t('lesson_help_message_label')}
+			<textarea
+				name="message"
+				rows="4"
+				class="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
+				>{valueOf('message')}</textarea
+			>
+		</label>
+
+		<button
+			type="submit"
+			class="bg-primary hover:bg-primary/90 w-full rounded-md px-5 py-3 text-sm font-bold text-white shadow-sm transition"
+		>
+			{$t('lesson_help_submit')}
+		</button>
+	</form>
 </article>
