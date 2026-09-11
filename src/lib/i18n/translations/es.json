@@ -2104,7 +2104,7 @@
 	"lesson_help_resort_label": "Estación o zona",
 	"lesson_help_dates_label": "Fechas o rango de fechas",
 	"lesson_help_preferred_dates_title": "Elige fechas preferidas",
-	"lesson_help_preferred_dates_copy": "Opcional, pero útil. La disponibilidad cambia rápido; estas fechas ayudan a LocalSnow a coordinar la clase y no son una reserva confirmada.",
+	"lesson_help_preferred_dates_copy": "Opcional, pero útil. La disponibilidad cambia rápido, así que LocalSnow siempre lo revisa antes de confirmar una clase.",
 	"lesson_help_preferred_dates_selected": "Fechas preferidas seleccionadas",
 	"lesson_help_time_window_label": "Franja horaria estimada",
 	"lesson_help_time_window_not_sure": "Aún no lo sé",

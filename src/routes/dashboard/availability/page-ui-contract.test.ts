@@ -23,4 +23,11 @@ describe('availability dashboard UI contract', () => {
 		expect(availabilityPage).toContain('aria-disabled={!hasConfiguredAvailability}');
 		expect(availabilityPage).toContain('pointer-events-none opacity-60');
 	});
+
+	it('renders available days as visible light green, not muted grey', () => {
+		expect(availabilityPage).toContain(
+			"available: 'border border-green-200 bg-green-50 text-green-700 hover:bg-green-100'"
+		);
+		expect(availabilityPage).toContain('bg-green-200');
+	});
 });

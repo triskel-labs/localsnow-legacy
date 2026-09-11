@@ -114,9 +114,9 @@
 	function getDayClass(iso: string): string {
 		const status = getDaySummary(iso).status;
 		const statusClass: Record<DashboardDayStatus, string> = {
-			available: 'bg-primary/10 text-primary hover:bg-primary/15',
-			partial: 'bg-amber-100 text-amber-900 hover:bg-amber-200',
-			blocked: 'bg-rose-100 text-rose-900 hover:bg-rose-200',
+			available: 'border border-green-200 bg-green-50 text-green-700 hover:bg-green-100',
+			partial: 'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100',
+			blocked: 'border border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100',
 			unavailable: 'bg-muted/70 text-muted-foreground',
 			unconfigured: 'bg-muted/50 text-muted-foreground'
 		};
@@ -495,7 +495,7 @@
 					{/if}
 					<div class="mt-4 grid grid-cols-2 gap-2 text-xs">
 						<div class="flex items-center gap-2">
-							<span class="bg-primary/30 size-3 rounded"></span>Available
+							<span class="size-3 rounded bg-green-200"></span>Available
 						</div>
 						<div class="flex items-center gap-2">
 							<span class="size-3 rounded bg-amber-200"></span>Partial
@@ -561,8 +561,8 @@
 						Client request picker rule
 					</div>
 					<p class="text-muted-foreground text-sm">
-						Dates and times are a preference signal for the request. LocalSnow still confirms the
-						lesson before treating it as booked.
+						Dates and times are a preference signal for the request. LocalSnow always double-checks
+						before confirming the lesson.
 					</p>
 				</Card.Content>
 			</Card.Root>

@@ -1862,7 +1862,7 @@
 	"lesson_help_resort_label": "Resort or area",
 	"lesson_help_dates_label": "Dates or date range",
 	"lesson_help_preferred_dates_title": "Pick preferred dates",
-	"lesson_help_preferred_dates_copy": "Optional, but useful. Availability changes quickly; these dates help LocalSnow coordinate the lesson and are not a confirmed booking.",
+	"lesson_help_preferred_dates_copy": "Optional, but useful. Availability changes quickly, so LocalSnow always double-checks before confirming a lesson.",
 	"lesson_help_preferred_dates_selected": "Selected preferred dates",
 	"lesson_help_time_window_label": "Estimated time window",
 	"lesson_help_time_window_not_sure": "Not sure yet",

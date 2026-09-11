@@ -58,7 +58,8 @@ describe('lesson help page copy and routing', () => {
 				/secure|suitable|lesson|alternative|refund|asegurar|clase|alternativa|reembolso/i
 			);
 			expect(copy).toMatch(/guaranteed|garantizada/i);
-			expect(copy).toMatch(/not a confirmed booking|no son una reserva confirmada/i);
+			expect(copy).toMatch(/double-checks before confirming|revisa antes de confirmar/i);
+			expect(copy).not.toMatch(/not a confirmed booking|no son una reserva confirmada/i);
 			expect(copy).not.toMatch(/ask localsnow to help|pedir ayuda a localsnow/i);
 			expect(copy).not.toMatch(
 				/manual|automation|backend|still figuring|opera manual|automatización/i

@@ -77,7 +77,7 @@
 		: `Book ski lessons with ${instructorFullName}, a certified ski instructor. ${reviewStats && reviewStats.totalReviews > 0 ? `Rated ${reviewStats.averageRating.toFixed(1)}/5 from ${reviewStats.totalReviews} reviews.` : 'Professional instruction for all skill levels.'}`;
 
 	// Create structured data for instructor profile
-	const personSchema = {
+	const personSchema = $derived.by(() => ({
 		'@context': 'https://schema.org',
 		'@type': 'Person',
 		name: instructorFullName,
@@ -123,15 +123,17 @@
 				}
 			}
 		})
-	};
+	}));
 
 	// Service schema for SEO
-	const serviceSchema = {
+	const serviceSchema = $derived.by(() => ({
 		'@context': 'https://schema.org',
 		'@type': 'Service',
-		serviceType: sports.map(s => `${s.sport} Instruction`).join(', ') || 'Ski Instruction',
-		name: `${sports.map(s => s.sport).join(' & ')} Lessons`,
-		description: instructor.bio || `Professional ${sports.map(s => s.sport.toLowerCase()).join(' and ')} instruction for all skill levels`,
+		serviceType: sports.map((s) => `${s.name} Instruction`).join(', ') || 'Ski Instruction',
+		name: `${sports.map((s) => s.name).join(' & ')} Lessons`,
+		description:
+			instructor.bio ||
+			`Professional ${sports.map((s) => s.name.toLowerCase()).join(' and ')} instruction for all skill levels`,
 		provider: {
 			'@type': 'Person',
 			name: instructorFullName,
@@ -155,7 +157,7 @@
 				availability: 'https://schema.org/InStock'
 			}
 		})
-	};
+	}));
 
 	// Organization schema for LocalSnow
 	const organizationSchema = {
@@ -169,7 +171,7 @@
 	};
 
 	// Breadcrumb schema
-	const breadcrumbSchema = {
+	const breadcrumbSchema = $derived.by(() => ({
 		'@context': 'https://schema.org',
 		'@type': 'BreadcrumbList',
 		itemListElement: [
@@ -192,32 +194,37 @@
 				item: profileUrl
 			}
 		]
-	};
+	}));
 
 	// Individual review schemas
-	const reviewSchemas = reviews && reviews.length > 0 ? reviews.map((review) => ({
-		'@context': 'https://schema.org',
-		'@type': 'Review',
-		reviewRating: {
-			'@type': 'Rating',
-			ratingValue: review.rating,
-			bestRating: 5,
-			worstRating: 1
-		},
-		author: {
-			'@type': 'Person',
-			name: review.reviewerName ||
-				(review.clientName && review.clientName.trim()) ||
-				(review.clientEmail ? review.clientEmail.split('@')[0] : 'Anonymous')
-		},
-		reviewBody: review.comment || '',
-		datePublished: review.createdAt ? new Date(review.createdAt).toISOString() : '',
-		itemReviewed: {
-			'@type': 'Person',
-			name: instructorFullName,
-			url: profileUrl
-		}
-	})) : [];
+	const reviewSchemas = $derived(
+		reviews && reviews.length > 0
+			? reviews.map((review) => ({
+				'@context': 'https://schema.org',
+				'@type': 'Review',
+				reviewRating: {
+					'@type': 'Rating',
+					ratingValue: review.rating,
+					bestRating: 5,
+					worstRating: 1
+				},
+				author: {
+					'@type': 'Person',
+					name:
+						review.reviewerName ||
+						(review.clientName && review.clientName.trim()) ||
+						(review.clientEmail ? review.clientEmail.split('@')[0] : 'Anonymous')
+				},
+				reviewBody: review.comment || '',
+				datePublished: review.createdAt ? new Date(review.createdAt).toISOString() : '',
+				itemReviewed: {
+					'@type': 'Person',
+					name: instructorFullName,
+					url: profileUrl
+				}
+			}))
+			: []
+	);
 </script>
 
 <svelte:head>
@@ -306,7 +313,7 @@
 							{instructor.name}
 							{instructor.lastName}
 						</h1>
-						<VerificationBadge isVerified={instructor.isVerified} size="lg" />
+						<VerificationBadge isVerified={instructor.isVerified ?? false} size="lg" />
 					</div>
 
 					<!-- Star Rating - Show actual rating if reviews exist -->
@@ -385,32 +392,31 @@
 
 			<!-- Client proof CTA block -->
 			<div class="mt-4 w-full space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
-				<div class="flex items-start justify-between gap-3">
-					<div>
-						<p class="text-sm font-semibold">{$t(availabilityProof.labelKey)}</p>
-						<p class="mt-1 text-xs text-muted-foreground">{$t(availabilityProof.clientCopyKey)}</p>
-					</div>
-					<Badge variant={availabilityProof.tone === 'positive' ? 'default' : 'secondary'} class="shrink-0 text-xs">
+				<div class="flex items-center justify-between gap-3">
+					<p class="text-sm font-semibold">{$t(availabilityProof.labelKey)}</p>
+					<Badge
+						variant="outline"
+						class={availabilityProof.tone === 'positive'
+							? 'shrink-0 border-green-200 bg-green-50 text-xs text-green-700'
+							: 'shrink-0 text-xs'}
+					>
 						{$t('availability_proof_available_label')}
 					</Badge>
 				</div>
 
 				<div class="grid gap-2">
-					<Button onclick={() => (showContactModal = true)} class="w-full" size="lg">
-						{$t(directPath?.ctaKey ?? 'client_path_direct_cta')}
-					</Button>
-					<p class="text-xs text-muted-foreground">{$t(directPath?.safeguardCopyKey ?? 'client_path_direct_safeguard')}</p>
-
 					<Button
 						onclick={() => (showProtectedBookingModal = true)}
 						class="w-full"
 						size="lg"
-						variant="outline"
 						disabled={!hasProtectedBooking}
 					>
 						{$t(protectedPath?.ctaKey ?? 'client_path_protected_disabled_cta')}
 					</Button>
-					<p class="text-xs text-muted-foreground">{$t(protectedPath?.safeguardCopyKey ?? 'client_path_protected_disabled_safeguard')}</p>
+
+					<Button onclick={() => (showContactModal = true)} class="w-full" size="lg" variant="outline">
+						{$t(directPath?.ctaKey ?? 'client_path_direct_cta')}
+					</Button>
 				</div>
 			</div>
 
