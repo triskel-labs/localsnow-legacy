@@ -9,9 +9,10 @@
 		{ label: $t('nav_schools'), href: route('/schools') },
 		{ label: $t('nav_resorts'), href: route('/resorts') },
 		{ label: $t('nav_how_it_works'), href: route('/how-it-works') },
+		{ label: $t('nav_help'), href: route('/help') },
 		{ label: $t('nav_about'), href: route('/about') },
 		{ label: $t('nav_signup'), href: route('/signup') },
-		{ label: $t('nav_contact'), href: route('/contact')}
+		{ label: $t('nav_contact'), href: route('/contact') }
 	]);
 
 	// Legal links - use $derived for translation reactivity

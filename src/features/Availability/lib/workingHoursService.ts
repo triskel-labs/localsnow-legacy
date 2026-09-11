@@ -57,16 +57,27 @@ export class WorkingHoursService {
 			dayOfWeek: number;
 			startTime: string;
 			endTime: string;
-			seasonStart?: string;
-			seasonEnd?: string;
+			seasonStart?: Date | null;
+			seasonEnd?: Date | null;
 		}>
 	) {
 		const results = [];
+		const enabledDays = new Set(hoursData.map((hours) => hours.dayOfWeek));
+
+		// The dashboard sends only enabled days. Deactivate missing days so toggling a day off
+		// actually changes the public/requestable availability signal.
+		for (let dayOfWeek = 0; dayOfWeek <= 6; dayOfWeek += 1) {
+			if (!enabledDays.has(dayOfWeek)) {
+				await this.deleteWorkingHours(instructorId, dayOfWeek);
+			}
+		}
 
 		for (const hours of hoursData) {
 			const result = await this.upsertWorkingHours({
 				instructorId,
 				...hours,
+				seasonStart: hours.seasonStart ?? null,
+				seasonEnd: hours.seasonEnd ?? null,
 				isActive: true
 			});
 			results.push(result[0]);
