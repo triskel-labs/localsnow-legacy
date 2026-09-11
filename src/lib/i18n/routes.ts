@@ -38,9 +38,13 @@ export const routeTranslations = {
 		en: '/contact',
 		es: '/contacto'
 	},
+	'/help': {
+		en: '/help',
+		es: '/ayuda'
+	},
 	'/secure-lesson': {
 		en: '/secure-lesson',
-		es: '/ayuda'
+		es: '/asegurar-clase'
 	},
 
 	// Instructors
