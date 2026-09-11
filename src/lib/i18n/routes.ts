@@ -40,7 +40,7 @@ export const routeTranslations = {
 	},
 	'/secure-lesson': {
 		en: '/secure-lesson',
-		es: '/asegurar-clase'
+		es: '/ayuda'
 	},
 
 	// Instructors

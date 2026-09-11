@@ -33,7 +33,7 @@ describe('lesson help page copy and routing', () => {
 
 		expect(routes).toContain("'/secure-lesson'");
 		expect(routes).toContain("en: '/secure-lesson'");
-		expect(routes).toContain("es: '/asegurar-clase'");
+		expect(routes).toContain("es: '/ayuda'");
 		expect(homepage).toContain("route('/secure-lesson')");
 		expect(homepage).toContain('home_trust_paths_operator_cta');
 		expect(contact).toContain("route('/secure-lesson', currentLocale)");
