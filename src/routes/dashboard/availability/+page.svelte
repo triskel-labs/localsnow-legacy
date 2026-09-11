@@ -15,7 +15,14 @@
 		type DashboardDayStatus,
 		type DashboardWorkingHour
 	} from '$src/features/Availability/lib/dashboardAvailability';
-	import { CalendarDays, CheckCircle2, Clock3, Link2, RefreshCw, ShieldCheck } from '@lucide/svelte';
+	import {
+		CalendarDays,
+		CheckCircle2,
+		Clock3,
+		Link2,
+		RefreshCw,
+		ShieldCheck
+	} from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -74,6 +81,7 @@
 	);
 
 	const enabledDaysCount = $derived(workingDays.filter((day) => day.isEnabled).length);
+	const hasConfiguredAvailability = $derived(enabledDaysCount > 0);
 	const visibleStatuses = $derived.by(() => {
 		const counts: Record<DashboardDayStatus, number> = {
 			unconfigured: 0,
@@ -106,9 +114,9 @@
 	function getDayClass(iso: string): string {
 		const status = getDaySummary(iso).status;
 		const statusClass: Record<DashboardDayStatus, string> = {
-			available: 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-100',
-			partial: 'bg-amber-100 text-amber-950 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-100',
-			blocked: 'bg-rose-100 text-rose-950 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-100',
+			available: 'bg-primary/10 text-primary hover:bg-primary/15',
+			partial: 'bg-amber-100 text-amber-900 hover:bg-amber-200',
+			blocked: 'bg-rose-100 text-rose-900 hover:bg-rose-200',
 			unavailable: 'bg-muted/70 text-muted-foreground',
 			unconfigured: 'bg-muted/50 text-muted-foreground'
 		};
@@ -256,7 +264,7 @@
 		<div class="space-y-2">
 			<p class="text-primary text-sm font-semibold tracking-wide uppercase">Availability</p>
 			<h1 class="title2">Set when clients can request you</h1>
-			<p class="max-w-2xl text-muted-foreground">
+			<p class="text-muted-foreground max-w-2xl">
 				Clients can choose preferred dates and estimated times from your availability pattern. Exact
 				lesson details are still confirmed before booking because mountain schedules change quickly.
 			</p>
@@ -266,46 +274,63 @@
 		</Button>
 	</header>
 
+	{#if !hasConfiguredAvailability}
+		<Card.Root class="border-primary/20 bg-primary/5">
+			<Card.Content class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
+				<div class="bg-primary/10 text-primary rounded-full p-2">
+					<Clock3 class="size-4" />
+				</div>
+				<div class="space-y-1">
+					<p class="font-semibold">Set your weekly availability first</p>
+					<p class="text-muted-foreground text-sm">
+						The form below is the active setup step. Calendar preview, profile availability, and
+						client preferred-time picking stay inactive until at least one working day is saved.
+					</p>
+				</div>
+			</Card.Content>
+		</Card.Root>
+	{/if}
+
 	<section class="grid gap-3 md:grid-cols-4">
 		<Card.Root>
 			<Card.Content class="flex items-center gap-3 p-4">
-				<div class="rounded-full bg-primary/10 p-2 text-primary"><Clock3 class="size-4" /></div>
+				<div class="bg-primary/10 text-primary rounded-full p-2"><Clock3 class="size-4" /></div>
 				<div>
 					<p class="text-2xl font-semibold">{enabledDaysCount}</p>
-					<p class="text-sm text-muted-foreground">Working days</p>
+					<p class="text-muted-foreground text-sm">Working days</p>
 				</div>
 			</Card.Content>
 		</Card.Root>
 		<Card.Root>
 			<Card.Content class="flex items-center gap-3 p-4">
-				<div class="rounded-full bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200">
+				<div class="bg-primary/10 text-primary rounded-full p-2">
 					<CheckCircle2 class="size-4" />
 				</div>
 				<div>
 					<p class="text-2xl font-semibold">{visibleStatuses.available}</p>
-					<p class="text-sm text-muted-foreground">Open next 45 days</p>
+					<p class="text-muted-foreground text-sm">Open next 45 days</p>
 				</div>
 			</Card.Content>
 		</Card.Root>
 		<Card.Root>
 			<Card.Content class="flex items-center gap-3 p-4">
-				<div class="rounded-full bg-amber-100 p-2 text-amber-700 dark:bg-amber-950 dark:text-amber-200">
+				<div class="rounded-full bg-amber-100 p-2 text-amber-700">
 					<CalendarDays class="size-4" />
 				</div>
 				<div>
 					<p class="text-2xl font-semibold">{visibleStatuses.partial + visibleStatuses.blocked}</p>
-					<p class="text-sm text-muted-foreground">Blocked / partial</p>
+					<p class="text-muted-foreground text-sm">Blocked / partial</p>
 				</div>
 			</Card.Content>
 		</Card.Root>
 		<Card.Root>
 			<Card.Content class="flex items-center gap-3 p-4">
-				<div class="rounded-full bg-sky-100 p-2 text-sky-700 dark:bg-sky-950 dark:text-sky-200">
+				<div class="bg-muted text-muted-foreground rounded-full p-2">
 					<Link2 class="size-4" />
 				</div>
 				<div>
 					<p class="text-base font-semibold">{data.connected ? 'Connected' : 'Optional'}</p>
-					<p class="text-sm text-muted-foreground">Google Calendar</p>
+					<p class="text-muted-foreground text-sm">Google Calendar</p>
 				</div>
 			</Card.Content>
 		</Card.Root>
@@ -349,7 +374,9 @@
 										<Switch bind:checked={day.isEnabled} />
 										<div>
 											<p class="font-semibold">{day.label}</p>
-											<p class="text-sm text-muted-foreground">{day.isEnabled ? 'Accept preferred times' : 'Hidden from availability'}</p>
+											<p class="text-muted-foreground text-sm">
+												{day.isEnabled ? 'Accept preferred times' : 'Hidden from availability'}
+											</p>
 										</div>
 									</div>
 									{#if day.isEnabled}
@@ -362,7 +389,12 @@
 												<Label for="end-{day.dayOfWeek}" class="text-xs">End</Label>
 												<Input id="end-{day.dayOfWeek}" type="time" bind:value={day.endTime} />
 											</div>
-											<Button type="button" variant="ghost" size="sm" onclick={() => copyFirstEnabledDay(index)}>
+											<Button
+												type="button"
+												variant="ghost"
+												size="sm"
+												onclick={() => copyFirstEnabledDay(index)}
+											>
 												Copy
 											</Button>
 										</div>
@@ -378,21 +410,22 @@
 				<Card.Header>
 					<Card.Title>Google Calendar busy blocks</Card.Title>
 					<Card.Description>
-						Optional layer. LocalSnow reads events as busy time; the weekly pattern remains the source of truth.
+						Optional layer. LocalSnow reads events as busy time; the weekly pattern remains the
+						source of truth.
 					</Card.Description>
 				</Card.Header>
 				<Card.Content class="space-y-4">
 					<div
 						class={cn(
 							'rounded-lg border p-4',
-							data.connected
-								? 'border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100'
-								: 'bg-muted/40'
+							data.connected ? 'border-primary/20 bg-primary/5 text-foreground' : 'bg-muted/40'
 						)}
 					>
 						<div class="flex items-start justify-between gap-4">
 							<div class="space-y-1">
-								<p class="font-semibold">{data.connected ? 'Calendar connected' : 'Calendar not connected'}</p>
+								<p class="font-semibold">
+									{data.connected ? 'Calendar connected' : 'Calendar not connected'}
+								</p>
 								<p class="text-sm opacity-80">
 									{data.connected
 										? 'Synced events appear as partial or blocked days on the calendar.'
@@ -415,11 +448,18 @@
 								<RefreshCw class={cn('mr-2 size-4', syncing && 'animate-spin')} />
 								{syncing ? 'Syncing…' : 'Sync now'}
 							</Button>
-							<Button type="button" variant="destructive" onclick={disconnectCalendar} disabled={disconnecting}>
+							<Button
+								type="button"
+								variant="destructive"
+								onclick={disconnectCalendar}
+								disabled={disconnecting}
+							>
 								{disconnecting ? 'Disconnecting…' : 'Disconnect'}
 							</Button>
 						{:else}
-							<Button type="button" variant="outline" onclick={connectCalendar}>Connect Google Calendar</Button>
+							<Button type="button" variant="outline" onclick={connectCalendar}
+								>Connect Google Calendar</Button
+							>
 						{/if}
 					</div>
 				</Card.Content>
@@ -427,32 +467,54 @@
 		</div>
 
 		<aside class="space-y-6">
-			<Card.Root>
+			<Card.Root aria-disabled={!hasConfiguredAvailability}>
 				<Card.Header>
 					<Card.Title>Calendar preview</Card.Title>
-					<Card.Description>Tap a day to inspect what clients can request.</Card.Description>
+					<Card.Description>
+						{hasConfiguredAvailability
+							? 'Tap a day to inspect what clients can request.'
+							: 'This activates after you save at least one working day.'}
+					</Card.Description>
 				</Card.Header>
 				<Card.Content>
-					<CalendarGrid
-						type="interactive"
-						{focusedDate}
-						{getDayClass}
-						{getDayDots}
-						onDayClick={(iso) => (focusedDate = iso)}
-						class="mx-auto max-w-md"
-					/>
+					<div class={cn(!hasConfiguredAvailability && 'pointer-events-none opacity-60')}>
+						<CalendarGrid
+							type={hasConfiguredAvailability ? 'interactive' : 'display'}
+							{focusedDate}
+							{getDayClass}
+							{getDayDots}
+							onDayClick={(iso) => (focusedDate = iso)}
+							class="mx-auto max-w-md"
+						/>
+					</div>
+					{#if !hasConfiguredAvailability}
+						<p class="bg-muted/50 text-muted-foreground mt-4 rounded-lg p-3 text-sm">
+							Profile availability and client preferred-time picking are disabled until the weekly
+							pattern is saved.
+						</p>
+					{/if}
 					<div class="mt-4 grid grid-cols-2 gap-2 text-xs">
-						<div class="flex items-center gap-2"><span class="size-3 rounded bg-emerald-200"></span>Available</div>
-						<div class="flex items-center gap-2"><span class="size-3 rounded bg-amber-200"></span>Partial</div>
-						<div class="flex items-center gap-2"><span class="size-3 rounded bg-rose-200"></span>Blocked</div>
-						<div class="flex items-center gap-2"><span class="size-3 rounded bg-muted"></span>Not working</div>
+						<div class="flex items-center gap-2">
+							<span class="bg-primary/30 size-3 rounded"></span>Available
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="size-3 rounded bg-amber-200"></span>Partial
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="size-3 rounded bg-rose-200"></span>Blocked
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="bg-muted size-3 rounded"></span>Not working
+						</div>
 					</div>
 				</Card.Content>
 			</Card.Root>
 
 			<Card.Root>
 				<Card.Header>
-					<Card.Title>{focusedSummary ? formatDate(focusedSummary.iso) : 'No day selected'}</Card.Title>
+					<Card.Title
+						>{focusedSummary ? formatDate(focusedSummary.iso) : 'No day selected'}</Card.Title
+					>
 					<Card.Description>
 						{focusedSummary ? statusLabel(focusedSummary.status) : 'Choose a date in the preview.'}
 					</Card.Description>
@@ -462,7 +524,7 @@
 						{#if focusedSummary.workingHours}
 							<div class="rounded-lg border p-3">
 								<p class="text-sm font-medium">Base hours</p>
-								<p class="text-sm text-muted-foreground">
+								<p class="text-muted-foreground text-sm">
 									{focusedSummary.workingHours.startTime}–{focusedSummary.workingHours.endTime}
 								</p>
 							</div>
@@ -479,13 +541,14 @@
 								{/each}
 							</div>
 						{:else}
-							<p class="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+							<p class="bg-muted/50 text-muted-foreground rounded-lg p-3 text-sm">
 								No busy block for this date in LocalSnow.
 							</p>
 						{/if}
 					{:else}
-						<p class="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
-							The public surface should describe selected slots as preferred times until they are confirmed.
+						<p class="bg-muted/50 text-muted-foreground rounded-lg p-3 text-sm">
+							The public surface should describe selected slots as preferred times until they are
+							confirmed.
 						</p>
 					{/if}
 				</Card.Content>
@@ -494,12 +557,12 @@
 			<Card.Root>
 				<Card.Content class="space-y-3 p-4">
 					<div class="flex items-center gap-2 font-semibold">
-						<ShieldCheck class="size-4 text-primary" />
-						Future client picker rule
+						<ShieldCheck class="text-primary size-4" />
+						Client request picker rule
 					</div>
-					<p class="text-sm text-muted-foreground">
-						Dates and times are a preference signal for the request. LocalSnow still confirms the lesson
-						before treating it as booked.
+					<p class="text-muted-foreground text-sm">
+						Dates and times are a preference signal for the request. LocalSnow still confirms the
+						lesson before treating it as booked.
 					</p>
 				</Card.Content>
 			</Card.Root>

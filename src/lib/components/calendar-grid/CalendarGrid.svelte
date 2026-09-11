@@ -133,7 +133,11 @@
 			cell.isToday && !selectedCell && !focused && !custom && 'cg-today',
 			cell.isToday && !selectedCell && !focused && custom && 'cg-today-on-status',
 			past && 'pointer-events-none opacity-35',
-			clickable && !selectedCell && !custom && !past && 'hover:bg-accent hover:text-accent-foreground',
+			clickable &&
+				!selectedCell &&
+				!custom &&
+				!past &&
+				'hover:bg-accent hover:text-accent-foreground',
 			clickable && !past && 'active:scale-95 active:opacity-70 cursor-pointer',
 			custom
 		);
@@ -142,7 +146,13 @@
 
 <div class={cn('w-full', className)}>
 	<div class="mb-3 flex items-center justify-between">
-		<Button type="button" variant="ghost" size="icon" onclick={prevMonth} aria-label={previousLabel}>
+		<Button
+			type="button"
+			variant="ghost"
+			size="icon"
+			onclick={prevMonth}
+			aria-label={previousLabel}
+		>
 			<ChevronLeft class="size-4" />
 		</Button>
 		<p class="text-sm font-semibold">{monthNames[month]} {year}</p>
@@ -153,7 +163,7 @@
 
 	<div class="mb-1 grid grid-cols-7 gap-1">
 		{#each weekdayLabels as label, index (`${label}-${index}`)}
-			<div class="py-1 text-center text-xs font-medium text-muted-foreground">{label}</div>
+			<div class="text-muted-foreground py-1 text-center text-xs font-medium">{label}</div>
 		{/each}
 	</div>
 
@@ -231,18 +241,5 @@
 			inset 0 0 0 1px color-mix(in srgb, white 24%, transparent),
 			inset 0 0 0 2px color-mix(in srgb, black 12%, transparent);
 		font-weight: 550;
-	}
-
-	:global(.dark) .cg-today {
-		box-shadow:
-			inset 0 0 0 1px color-mix(in srgb, white 20%, transparent),
-			inset 0 0 0 2px color-mix(in srgb, white 9%, transparent);
-		background: color-mix(in srgb, white 5%, transparent);
-	}
-
-	:global(.dark) .cg-today-on-status {
-		box-shadow:
-			inset 0 0 0 1px color-mix(in srgb, white 28%, transparent),
-			inset 0 0 0 2px color-mix(in srgb, black 20%, transparent);
 	}
 </style>
