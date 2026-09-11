@@ -31,5 +31,8 @@ vite.config.ts.timestamp-*
 # Intlayer generated files
 .intlayer
 
+# Local agent/session working files
+.hermes/
+
 # Sentry Config File
 .env.sentry-build-plugin

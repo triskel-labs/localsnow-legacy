@@ -1,15 +1,196 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
+	import { Badge } from '$src/lib/components/ui/badge';
 	import { Button } from '$src/lib/components/ui/button';
 	import * as Card from '$src/lib/components/ui/card';
-	import { Badge } from '$src/lib/components/ui/badge';
+	import { Input } from '$src/lib/components/ui/input';
+	import { Label } from '$src/lib/components/ui/label';
+	import { Switch } from '$src/lib/components/ui/switch';
+	import { CalendarGrid } from '$src/lib/components/calendar-grid';
+	import { cn } from '$src/lib/utils';
+	import {
+		getDashboardDaySummary,
+		seasonWindow,
+		type DashboardCalendarBlock,
+		type DashboardDayStatus,
+		type DashboardWorkingHour
+	} from '$src/features/Availability/lib/dashboardAvailability';
+	import { CalendarDays, CheckCircle2, Clock3, Link2, RefreshCw, ShieldCheck } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';	import { route } from '$lib/i18n/routeHelpers';
-	import { t } from '$src/lib/i18n/i18n.js';
+	import type { PageData } from './$types';
 
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
 
+	type WorkingDay = {
+		dayOfWeek: number;
+		label: string;
+		shortLabel: string;
+		isEnabled: boolean;
+		startTime: string;
+		endTime: string;
+	};
+
+	const orderedDays = [
+		{ dayOfWeek: 1, label: 'Monday', shortLabel: 'Mon' },
+		{ dayOfWeek: 2, label: 'Tuesday', shortLabel: 'Tue' },
+		{ dayOfWeek: 3, label: 'Wednesday', shortLabel: 'Wed' },
+		{ dayOfWeek: 4, label: 'Thursday', shortLabel: 'Thu' },
+		{ dayOfWeek: 5, label: 'Friday', shortLabel: 'Fri' },
+		{ dayOfWeek: 6, label: 'Saturday', shortLabel: 'Sat' },
+		{ dayOfWeek: 0, label: 'Sunday', shortLabel: 'Sun' }
+	];
+
+	const existingSeason = seasonWindow(data.workingHours);
+	let seasonStart = $state(existingSeason.seasonStart);
+	let seasonEnd = $state(existingSeason.seasonEnd);
+	let saving = $state(false);
 	let syncing = $state(false);
 	let disconnecting = $state(false);
+	let focusedDate = $state('');
+
+	let workingDays = $state<WorkingDay[]>(
+		orderedDays.map((day) => {
+			const existing = data.workingHours.find((hour) => hour.dayOfWeek === day.dayOfWeek);
+			return {
+				...day,
+				isEnabled: Boolean(existing),
+				startTime: existing?.startTime ?? '09:00',
+				endTime: existing?.endTime ?? '16:00'
+			};
+		})
+	);
+
+	const workingHoursForPreview = $derived<DashboardWorkingHour[]>(
+		workingDays
+			.filter((day) => day.isEnabled)
+			.map((day) => ({
+				dayOfWeek: day.dayOfWeek,
+				startTime: day.startTime,
+				endTime: day.endTime,
+				seasonStart: seasonStart || null,
+				seasonEnd: seasonEnd || null,
+				isActive: true
+			}))
+	);
+
+	const enabledDaysCount = $derived(workingDays.filter((day) => day.isEnabled).length);
+	const visibleStatuses = $derived.by(() => {
+		const counts: Record<DashboardDayStatus, number> = {
+			unconfigured: 0,
+			unavailable: 0,
+			available: 0,
+			partial: 0,
+			blocked: 0
+		};
+		const now = new Date();
+		for (let index = 0; index < 45; index += 1) {
+			const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + index);
+			const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+				date.getDate()
+			).padStart(2, '0')}`;
+			counts[getDaySummary(iso).status] += 1;
+		}
+		return counts;
+	});
+
+	const focusedSummary = $derived(focusedDate ? getDaySummary(focusedDate) : null);
+
+	function getDaySummary(iso: string) {
+		return getDashboardDaySummary({
+			iso,
+			workingHours: workingHoursForPreview,
+			blocks: data.calendarBlocks
+		});
+	}
+
+	function getDayClass(iso: string): string {
+		const status = getDaySummary(iso).status;
+		const statusClass: Record<DashboardDayStatus, string> = {
+			available: 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-100',
+			partial: 'bg-amber-100 text-amber-950 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-100',
+			blocked: 'bg-rose-100 text-rose-950 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-100',
+			unavailable: 'bg-muted/70 text-muted-foreground',
+			unconfigured: 'bg-muted/50 text-muted-foreground'
+		};
+		return statusClass[status];
+	}
+
+	function getDayDots(iso: string): Array<'neutral' | 'primary'> {
+		return getDaySummary(iso).blocks.length > 0 ? ['neutral'] : [];
+	}
+
+	function formatDate(iso: string): string {
+		return new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', {
+			weekday: 'long',
+			day: 'numeric',
+			month: 'long'
+		});
+	}
+
+	function formatBlockTime(block: DashboardCalendarBlock): string {
+		if (block.allDay) return 'All day';
+		const start = new Date(block.startDatetime);
+		const end = new Date(block.endDatetime);
+		return `${start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}–${end.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+	}
+
+	function statusLabel(status: DashboardDayStatus): string {
+		return {
+			available: 'Available',
+			partial: 'Partially blocked',
+			blocked: 'Blocked',
+			unavailable: 'Not a working day',
+			unconfigured: 'Not configured'
+		}[status];
+	}
+
+	function copyFirstEnabledDay(index: number) {
+		const source = workingDays[index];
+		workingDays = workingDays.map((day) =>
+			day.isEnabled ? { ...day, startTime: source.startTime, endTime: source.endTime } : day
+		);
+		toast.success('Times copied to enabled days');
+	}
+
+	function setPreset(days: 'weekdays' | 'all') {
+		workingDays = workingDays.map((day) => ({
+			...day,
+			isEnabled: days === 'all' ? true : day.dayOfWeek >= 1 && day.dayOfWeek <= 5
+		}));
+	}
+
+	async function saveAvailability() {
+		saving = true;
+		try {
+			const workingHours = workingDays
+				.filter((day) => day.isEnabled)
+				.map((day) => ({
+					dayOfWeek: day.dayOfWeek,
+					startTime: day.startTime,
+					endTime: day.endTime,
+					seasonStart: seasonStart || null,
+					seasonEnd: seasonEnd || null
+				}));
+
+			const response = await fetch('/api/availability/working-hours', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ workingHours })
+			});
+			const payload = await response.json();
+
+			if (!response.ok) {
+				throw new Error(payload.error || 'Failed to save availability');
+			}
+
+			toast.success('Availability saved');
+			await invalidateAll();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : 'Failed to save availability');
+		} finally {
+			saving = false;
+		}
+	}
 
 	async function connectCalendar() {
 		try {
@@ -21,11 +202,9 @@
 				return;
 			}
 
-			if (json.authUrl) {
-				window.location.href = json.authUrl;
-			}
-		} catch (error) {
-			toast.error('Failed to start connection process');
+			if (json.authUrl) window.location.href = json.authUrl;
+		} catch {
+			toast.error('Failed to start calendar connection');
 		}
 	}
 
@@ -34,14 +213,13 @@
 		try {
 			const res = await fetch('/api/calendar/connect', { method: 'POST' });
 			const json = await res.json();
-
 			if (json.success) {
-				toast.success(`Synced ${json.eventsImported} events from Google Calendar`);
+				toast.success(`Synced ${json.eventsImported ?? 0} events from Google Calendar`);
 				await invalidateAll();
 			} else {
 				toast.error(json.error || 'Sync failed');
 			}
-		} catch (error) {
+		} catch {
 			toast.error('Failed to sync calendar');
 		} finally {
 			syncing = false;
@@ -49,296 +227,282 @@
 	}
 
 	async function disconnectCalendar() {
-		if (!confirm('Are you sure you want to disconnect your Google Calendar?')) {
-			return;
-		}
-
+		if (!confirm('Disconnect Google Calendar from LocalSnow availability?')) return;
 		disconnecting = true;
 		try {
 			const res = await fetch('/api/calendar/connect', { method: 'DELETE' });
 			const json = await res.json();
-
 			if (json.success) {
-				toast.success('Calendar disconnected successfully');
+				toast.success('Calendar disconnected');
 				await invalidateAll();
 			} else {
 				toast.error('Failed to disconnect calendar');
 			}
-		} catch (error) {
+		} catch {
 			toast.error('Failed to disconnect calendar');
 		} finally {
 			disconnecting = false;
 		}
 	}
 
-	// Show toast messages from OAuth callback
 	$effect(() => {
-		if (data.successMessage) {
-			toast.success(data.successMessage);
-		}
-		if (data.errorMessage) {
-			toast.error(data.errorMessage);
-		}
+		if (data.successMessage) toast.success(data.successMessage);
+		if (data.errorMessage) toast.error(data.errorMessage);
 	});
 </script>
 
-<div class="container mx-auto max-w-4xl py-6">
-	<!-- Header -->
-	<div class="mb-6">
-		<h1 class="title2 mb-2">{$t('availability_page_title')}</h1>
-		<p class="text-muted-foreground">
-			{$t('availability_page_subtitle')}
-		</p>
-	</div>
+<div class="container mx-auto max-w-6xl space-y-6 py-6">
+	<header class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+		<div class="space-y-2">
+			<p class="text-primary text-sm font-semibold tracking-wide uppercase">Availability</p>
+			<h1 class="title2">Set when clients can request you</h1>
+			<p class="max-w-2xl text-muted-foreground">
+				Clients can choose preferred dates and estimated times from your availability pattern. Exact
+				lesson details are still confirmed before booking because mountain schedules change quickly.
+			</p>
+		</div>
+		<Button onclick={saveAvailability} disabled={saving}>
+			{saving ? 'Saving…' : 'Save availability'}
+		</Button>
+	</header>
 
-	<!-- Google Calendar Connection Card -->
-	<Card.Root class="border-2">
-		<Card.Header>
-			<div class="flex items-start justify-between">
+	<section class="grid gap-3 md:grid-cols-4">
+		<Card.Root>
+			<Card.Content class="flex items-center gap-3 p-4">
+				<div class="rounded-full bg-primary/10 p-2 text-primary"><Clock3 class="size-4" /></div>
 				<div>
-					<Card.Title class="flex items-center gap-2">
-						<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-							/>
-						</svg>
-						{$t('availability_google_calendar_title')}
-						{#if data.connected}
-							<Badge variant="default" class="bg-green-600">{$t('status_connected')}</Badge>
-						{:else}
-							<Badge variant="secondary">{$t('status_not_connected')}</Badge>
-						{/if}
-					</Card.Title>
-					<Card.Description class="mt-1">
-						{$t('availability_google_calendar_desc')}
+					<p class="text-2xl font-semibold">{enabledDaysCount}</p>
+					<p class="text-sm text-muted-foreground">Working days</p>
+				</div>
+			</Card.Content>
+		</Card.Root>
+		<Card.Root>
+			<Card.Content class="flex items-center gap-3 p-4">
+				<div class="rounded-full bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200">
+					<CheckCircle2 class="size-4" />
+				</div>
+				<div>
+					<p class="text-2xl font-semibold">{visibleStatuses.available}</p>
+					<p class="text-sm text-muted-foreground">Open next 45 days</p>
+				</div>
+			</Card.Content>
+		</Card.Root>
+		<Card.Root>
+			<Card.Content class="flex items-center gap-3 p-4">
+				<div class="rounded-full bg-amber-100 p-2 text-amber-700 dark:bg-amber-950 dark:text-amber-200">
+					<CalendarDays class="size-4" />
+				</div>
+				<div>
+					<p class="text-2xl font-semibold">{visibleStatuses.partial + visibleStatuses.blocked}</p>
+					<p class="text-sm text-muted-foreground">Blocked / partial</p>
+				</div>
+			</Card.Content>
+		</Card.Root>
+		<Card.Root>
+			<Card.Content class="flex items-center gap-3 p-4">
+				<div class="rounded-full bg-sky-100 p-2 text-sky-700 dark:bg-sky-950 dark:text-sky-200">
+					<Link2 class="size-4" />
+				</div>
+				<div>
+					<p class="text-base font-semibold">{data.connected ? 'Connected' : 'Optional'}</p>
+					<p class="text-sm text-muted-foreground">Google Calendar</p>
+				</div>
+			</Card.Content>
+		</Card.Root>
+	</section>
+
+	<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+		<div class="space-y-6">
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>Weekly pattern</Card.Title>
+					<Card.Description>
+						This is the base signal for profile availability and future request/booking flows.
 					</Card.Description>
-				</div>
-			</div>
-		</Card.Header>
-		<Card.Content class="space-y-4">
-			{#if data.connected && data.syncDetails}
-				<!-- Connected State -->
-				<div class="rounded-lg bg-green-50 p-4">
-					<div class="flex items-start gap-3">
-						<svg
-							class="h-5 w-5 flex-shrink-0 text-green-600"
-							fill="currentColor"
-							viewBox="0 0 20 20"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-						<div class="text-sm text-green-800">
-							<p class="font-medium">{$t('availability_calendar_connected_title')}</p>
-							<p class="mt-1">
-								{$t('availability_calendar_connected_message')}
-							</p>
-							{#if data.syncDetails.lastSyncAt}
-								<p class="mt-2 text-xs">
-									{$t('availability_last_synced')} {new Date(data.syncDetails.lastSyncAt).toLocaleString()}
+				</Card.Header>
+				<Card.Content class="space-y-5">
+					<div class="grid gap-4 md:grid-cols-2">
+						<div class="space-y-2">
+							<Label for="season-start">Season start</Label>
+							<Input id="season-start" type="date" bind:value={seasonStart} />
+						</div>
+						<div class="space-y-2">
+							<Label for="season-end">Season end</Label>
+							<Input id="season-end" type="date" bind:value={seasonEnd} />
+						</div>
+					</div>
+
+					<div class="flex flex-wrap gap-2">
+						<Button type="button" variant="outline" size="sm" onclick={() => setPreset('weekdays')}>
+							Weekdays
+						</Button>
+						<Button type="button" variant="outline" size="sm" onclick={() => setPreset('all')}>
+							All days
+						</Button>
+					</div>
+
+					<div class="space-y-3">
+						{#each workingDays as day, index (day.dayOfWeek)}
+							<div class="rounded-lg border p-4">
+								<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+									<div class="flex items-center gap-3">
+										<Switch bind:checked={day.isEnabled} />
+										<div>
+											<p class="font-semibold">{day.label}</p>
+											<p class="text-sm text-muted-foreground">{day.isEnabled ? 'Accept preferred times' : 'Hidden from availability'}</p>
+										</div>
+									</div>
+									{#if day.isEnabled}
+										<div class="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+											<div class="space-y-1">
+												<Label for="start-{day.dayOfWeek}" class="text-xs">Start</Label>
+												<Input id="start-{day.dayOfWeek}" type="time" bind:value={day.startTime} />
+											</div>
+											<div class="space-y-1">
+												<Label for="end-{day.dayOfWeek}" class="text-xs">End</Label>
+												<Input id="end-{day.dayOfWeek}" type="time" bind:value={day.endTime} />
+											</div>
+											<Button type="button" variant="ghost" size="sm" onclick={() => copyFirstEnabledDay(index)}>
+												Copy
+											</Button>
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+				</Card.Content>
+			</Card.Root>
+
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>Google Calendar busy blocks</Card.Title>
+					<Card.Description>
+						Optional layer. LocalSnow reads events as busy time; the weekly pattern remains the source of truth.
+					</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-4">
+					<div
+						class={cn(
+							'rounded-lg border p-4',
+							data.connected
+								? 'border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100'
+								: 'bg-muted/40'
+						)}
+					>
+						<div class="flex items-start justify-between gap-4">
+							<div class="space-y-1">
+								<p class="font-semibold">{data.connected ? 'Calendar connected' : 'Calendar not connected'}</p>
+								<p class="text-sm opacity-80">
+									{data.connected
+										? 'Synced events appear as partial or blocked days on the calendar.'
+										: 'Connect it when you want existing busy time to shape requests automatically.'}
 								</p>
-							{/if}
+								{#if data.syncDetails?.lastSyncAt}
+									<p class="text-xs opacity-70">
+										Last synced {new Date(data.syncDetails.lastSyncAt).toLocaleString()}
+									</p>
+								{/if}
+							</div>
+							<Badge variant={data.connected ? 'default' : 'secondary'}>
+								{data.connected ? 'Connected' : 'Optional'}
+							</Badge>
 						</div>
 					</div>
-				</div>
-
-				<!-- Sync Actions -->
-				<div class="flex flex-col sm:flex-row gap-3">
-					<Button onclick={syncNow} disabled={syncing} variant="outline">
-						{#if syncing}
-							<svg
-								class="mr-2 h-4 w-4 animate-spin"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<circle
-									class="opacity-25"
-									cx="12"
-									cy="12"
-									r="10"
-									stroke="currentColor"
-									stroke-width="4"
-								></circle>
-								<path
-									class="opacity-75"
-									fill="currentColor"
-									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-								></path>
-							</svg>
-							{$t('button_syncing')}
+					<div class="flex flex-wrap gap-2">
+						{#if data.connected}
+							<Button type="button" variant="outline" onclick={syncNow} disabled={syncing}>
+								<RefreshCw class={cn('mr-2 size-4', syncing && 'animate-spin')} />
+								{syncing ? 'Syncing…' : 'Sync now'}
+							</Button>
+							<Button type="button" variant="destructive" onclick={disconnectCalendar} disabled={disconnecting}>
+								{disconnecting ? 'Disconnecting…' : 'Disconnect'}
+							</Button>
 						{:else}
-							<svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-								/>
-							</svg>
-							{$t('button_sync_now')}
+							<Button type="button" variant="outline" onclick={connectCalendar}>Connect Google Calendar</Button>
 						{/if}
-					</Button>
-					<Button
-						onclick={disconnectCalendar}
-						disabled={disconnecting}
-						variant="destructive"
-						class="sm:ml-auto"
-					>
-						{#if disconnecting}
-							Disconnecting...
-						{:else}
-							{$t('button_disconnect_calendar')}
-						{/if}
-					</Button>
-				</div>
-			{:else}
-				<!-- Not Connected State -->
-				<div class="rounded-lg border-2 border-dashed border-border p-6 text-center">
-					<div
-						class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted"
-					>
-						<svg class="h-8 w-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-							/>
-						</svg>
 					</div>
-					<h3 class="mb-2 font-semibold text-lg">{$t('availability_connect_calendar_heading')}</h3>
-					<p class="mb-4 text-muted-foreground">
-						{$t('availability_connect_calendar_desc')}
-					</p>
-					<Button onclick={connectCalendar} class="mx-auto">
-						<svg class="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-							<path
-								d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-							/>
-							<path
-								d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-							/>
-							<path
-								d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-							/>
-							<path
-								d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-							/>
-						</svg>
-						{$t('button_connect_google_calendar')}
-					</Button>
-				</div>
+				</Card.Content>
+			</Card.Root>
+		</div>
 
-				<!-- Info Box -->
-				<div class="rounded-md border border-blue-200 bg-blue-50 p-4">
-					<div class="flex gap-3">
-						<svg
-							class="h-5 w-5 flex-shrink-0 text-blue-600"
-							fill="currentColor"
-							viewBox="0 0 20 20"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-						<div class="text-sm text-blue-800">
-							<p class="font-medium">{$t('availability_why_connect_title')}</p>
-							<ul class="mt-2 space-y-1 text-sm">
-								<li>• {$t('availability_benefit1')}</li>
-								<li>• {$t('availability_benefit2')}</li>
-								<li>• {$t('availability_benefit3')}</li>
-								<li>• {$t('availability_benefit4')}</li>
-							</ul>
-							<p class="mt-2 text-xs">
-								{$t('availability_calendar_disclaimer')}
-							</p>
-						</div>
-					</div>
-				</div>
-			{/if}
-		</Card.Content>
-	</Card.Root>
-
-	<!-- Working Hours Card -->
-	<Card.Root class="mt-6 border-2">
-		<Card.Header>
-			<Card.Title class="flex items-center gap-2">
-				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+		<aside class="space-y-6">
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>Calendar preview</Card.Title>
+					<Card.Description>Tap a day to inspect what clients can request.</Card.Description>
+				</Card.Header>
+				<Card.Content>
+					<CalendarGrid
+						type="interactive"
+						{focusedDate}
+						{getDayClass}
+						{getDayDots}
+						onDayClick={(iso) => (focusedDate = iso)}
+						class="mx-auto max-w-md"
 					/>
-				</svg>
-				{$t('availability_working_hours_title')}
-				{#if data.workingHoursConfigured}
-					<Badge variant="default" class="bg-green-600">{$t('status_configured')}</Badge>
-				{:else}
-					<Badge variant="secondary">{$t('status_not_set')}</Badge>
-				{/if}
-			</Card.Title>
-			<Card.Description>
-				{$t('availability_working_hours_desc')}
-			</Card.Description>
-		</Card.Header>
-		<Card.Content class="space-y-4">
-			{#if data.workingHoursConfigured}
-				<div class="rounded-lg bg-green-50 p-4">
-					<div class="flex items-start gap-3">
-						<svg
-							class="h-5 w-5 flex-shrink-0 text-green-600"
-							fill="currentColor"
-							viewBox="0 0 20 20"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-						<div class="text-sm text-green-800">
-							<p class="font-medium">{$t('availability_working_hours_set')}</p>
-							<p class="mt-1">
-								{$t('availability_working_hours_configured_message')}
+					<div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+						<div class="flex items-center gap-2"><span class="size-3 rounded bg-emerald-200"></span>Available</div>
+						<div class="flex items-center gap-2"><span class="size-3 rounded bg-amber-200"></span>Partial</div>
+						<div class="flex items-center gap-2"><span class="size-3 rounded bg-rose-200"></span>Blocked</div>
+						<div class="flex items-center gap-2"><span class="size-3 rounded bg-muted"></span>Not working</div>
+					</div>
+				</Card.Content>
+			</Card.Root>
+
+			<Card.Root>
+				<Card.Header>
+					<Card.Title>{focusedSummary ? formatDate(focusedSummary.iso) : 'No day selected'}</Card.Title>
+					<Card.Description>
+						{focusedSummary ? statusLabel(focusedSummary.status) : 'Choose a date in the preview.'}
+					</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-4">
+					{#if focusedSummary}
+						{#if focusedSummary.workingHours}
+							<div class="rounded-lg border p-3">
+								<p class="text-sm font-medium">Base hours</p>
+								<p class="text-sm text-muted-foreground">
+									{focusedSummary.workingHours.startTime}–{focusedSummary.workingHours.endTime}
+								</p>
+							</div>
+						{/if}
+
+						{#if focusedSummary.blocks.length > 0}
+							<div class="space-y-2">
+								<p class="text-sm font-medium">Busy blocks</p>
+								{#each focusedSummary.blocks as block (block.id)}
+									<div class="rounded-lg border p-3 text-sm">
+										<p class="font-medium">{formatBlockTime(block)}</p>
+										<p class="text-muted-foreground">{block.title || block.source || 'Busy'}</p>
+									</div>
+								{/each}
+							</div>
+						{:else}
+							<p class="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+								No busy block for this date in LocalSnow.
 							</p>
-						</div>
+						{/if}
+					{:else}
+						<p class="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+							The public surface should describe selected slots as preferred times until they are confirmed.
+						</p>
+					{/if}
+				</Card.Content>
+			</Card.Root>
+
+			<Card.Root>
+				<Card.Content class="space-y-3 p-4">
+					<div class="flex items-center gap-2 font-semibold">
+						<ShieldCheck class="size-4 text-primary" />
+						Future client picker rule
 					</div>
-				</div>
-			{:else}
-				<div class="rounded-lg border-2 border-dashed border-border p-6 text-center">
-					<div
-						class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted"
-					>
-						<svg class="h-8 w-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-							/>
-						</svg>
-					</div>
-					<h3 class="mb-2 font-semibold text-lg">{$t('availability_set_working_hours_heading')}</h3>
-					<p class="mb-4 text-muted-foreground">
-						{$t('availability_set_working_hours_desc')}
+					<p class="text-sm text-muted-foreground">
+						Dates and times are a preference signal for the request. LocalSnow still confirms the lesson
+						before treating it as booked.
 					</p>
-				</div>
-			{/if}
-		</Card.Content>
-		<Card.Footer>
-			<Button href={route('/dashboard/availability/working-hours')} class="w-full">
-				{data.workingHoursConfigured ? $t('button_edit_working_hours') : $t('button_set_working_hours')}
-			</Button>
-		</Card.Footer>
-	</Card.Root>
+				</Card.Content>
+			</Card.Root>
+		</aside>
+	</div>
 </div>

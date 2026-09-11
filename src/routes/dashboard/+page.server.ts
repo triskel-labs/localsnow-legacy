@@ -23,8 +23,16 @@ export interface ProfileCompletionItem {
     href: string;
 }
 
+type CompletionUser = ReturnType<typeof requireAuth> & {
+    profileImageUrl?: string | null;
+    qualificationUrl?: string | null;
+    professionalPhone?: string | null;
+    bio?: string | null;
+    spokenLanguages?: string[] | null;
+};
+
 interface CompletionConfig {
-    user: ReturnType<typeof requireAuth>;
+    user: CompletionUser;
     sports: { instructorId: number }[];
     resorts: { instructorId: number }[];
     hasWorkingHours: boolean;
@@ -150,7 +158,7 @@ function buildProfileCompletion(cfg: CompletionConfig): {
                 : "Set your weekly schedule so clients know when you're available",
             completed: cfg.hasWorkingHours,
             required: false,
-            href: '/dashboard/availability/working-hours'
+            href: '/dashboard/availability'
         },
         // Independent only: base lesson pricing
         ...(isIndependent ? [{
