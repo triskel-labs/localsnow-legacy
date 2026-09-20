@@ -85,12 +85,17 @@ These fields are for LocalSnow operations and trust checks. They should not leak
 
 Required for early onboarding:
 
-- public/professional display name;
 - provider type: independent instructor, school provider, or school-affiliated instructor;
 - professional email for lesson/inquiry information, with a “use same as personal” option if appropriate;
 - professional phone for lesson/inquiry information, with a “use same as personal” option if appropriate;
 - languages the provider can teach in;
 - short public bio.
+
+Public display naming rule:
+
+- independent instructor: derive the public display name from personal first name + surname initial, e.g. `Laura M.`;
+- school provider: ask for a separate public school/professional name field;
+- school-affiliated instructor: default to the independent display-name rule unless the school/provider relationship requires a different public format.
 
 Optional but useful:
 
@@ -134,6 +139,8 @@ This data supports:
 ### Readiness meaning
 
 Profile data can make a provider profile-ready, but it does not by itself create a sellable or requestable lesson.
+
+If a provider stalls here, treat them as a warm sales/onboarding lead, not as a failed user. Moli can call or message personally to resolve doubts, help them finish setup, and improve the quality of the provider database.
 
 ---
 
@@ -181,6 +188,10 @@ This data supports:
 
 A provider can only be matched to broad marketplace demand once LocalSnow knows their first resort/zone and what they teach.
 
+After this stage, LocalSnow can already have a usable public/provider profile. Even without a saved price/default offer or structured availability, the profile may be shown with request-only copy such as: “This instructor has not published exact availability or a specific offer yet, but you can still send a lesson request. They can reply with confirmation, answers, and price.”
+
+This state is also valuable internally: it lets Moli track warm but incomplete providers and personally enrich the profile through call/message help instead of losing them.
+
 ---
 
 ## 5. Stage 3 — Default offer
@@ -221,17 +232,19 @@ Optional but important soon:
 
 ### Tag/taxonomy selection rule
 
-Use a reusable tag-selector UI for age groups, levels, sports/modalities, and similar taxonomies.
+For v1, keep detailed client-fit taxonomy at the **offer level**, not duplicated at provider/profile level.
 
-Provider-level selections are general capabilities. Offer-level selections are more specific:
+Cleaner split:
 
 ```text
-offer-specific tags
-> provider-level defaults
-> empty/unknown
+provider/profile level
+→ identity, languages, one primary resort, sports, broad professional summary
+
+offer level
+→ ages, levels, min/max students, lesson type/modality, duration, price, cancellation/refund policy reference
 ```
 
-If an offer has its own level or age tags, those tags apply to that offer. If the offer leaves a taxonomy unset, LocalSnow can inherit the reviewed provider-level default, but should make that inheritance visible in the UI so the provider understands what is being reused.
+This avoids asking the provider for the same ages/levels twice and keeps the model easier to maintain. If LocalSnow later needs profile-level defaults, add them only after real offer data shows repetition; do not start with inherited defaults unless UX proves they save work.
 
 ### Purpose
 
@@ -276,11 +289,18 @@ Required for early onboarding:
 
 Optional or later:
 
-- exact calendar blocks;
-- seasonal date ranges;
-- blocked periods;
-- offer-specific availability;
-- Google Calendar busy-block import.
+- offer-specific availability.
+
+Use the mature SkiRelay-style availability model as the direction for structured availability:
+
+- season start/end;
+- weekly working days;
+- working-hours window;
+- availability/blocked-date records;
+- optional timed blocks;
+- Google Calendar connection/sync for blocks when connected.
+
+This is more production-ready than inventing multiple abstract availability modes. LocalSnow should adapt that pattern, then layer client-facing request/booking copy on top.
 
 ### Product rule
 
@@ -361,6 +381,8 @@ Required for early onboarding:
 - public visibility decision;
 - reviewed/trustworthy badge decision.
 
+Provider-facing Stage 5 should be simple: a “thank you / setup complete” confirmation, not a complex form. The message should say the profile is set up, LocalSnow may contact them if something important is missing, and the reviewed/trustworthy status appears after LocalSnow checks everything.
+
 Optional or later:
 
 - provider correction notes;
@@ -391,26 +413,25 @@ This data supports:
 
 LocalSnow review is a publication/requestability/trust gate. It is not the same thing as full booking/payment readiness.
 
+Paid booking also needs a platform-wide cancellation/refund policy. Do not ask each provider to configure cancellation policies in this onboarding slice. Provider-specific notes can inform manual operations, but the public client promise should be governed by LocalSnow’s platform policy so liability is not fragmented across inconsistent provider settings.
+
 ---
 
-## 8. Onboarding data inheritance model
+## 8. Onboarding data ownership model
 
-Use this hierarchy while collecting data:
+Avoid duplicated taxonomy between provider profile and offers in v1.
 
-```text
-offer-specific settings
-> provider hard limits
-> provider defaults
-```
-
-This prevents contradictions such as:
+Use this ownership rule:
 
 ```text
-Profile says: teaches all ages and all levels.
-Only active offer says: kids beginner ski lesson.
+provider profile owns
+→ identity, public/private contact boundary, languages, one primary resort, sports, broad professional summary
+
+default offer owns
+→ ages, levels, min/max students, lesson type/modality, duration, price, request/booking fit
 ```
 
-In that case, the offer should clearly say kids beginner lesson, while the broader provider capability can remain available for custom/future requests if reviewed.
+This prevents contradictory UX such as asking “what levels do you teach?” on the profile and then asking the same thing again on every offer. The profile can still communicate a broad professional summary in prose, but structured client-fit tags should start at offer level.
 
 This is an onboarding data rule only. It does not design the final result ranking or card UI.
 
@@ -425,13 +446,15 @@ Do not block first onboarding on:
 - search ranking or result-card engine;
 - SEO offer expansion;
 - Stripe/payment/payout setup;
-- cancellation/weather/legal policy;
+- provider-selectable cancellation/weather/legal policy options;
 - complete booking workflow;
 - full calendar sync;
 - provider CRM/marketing automation;
 - automated school ownership/proof workflow.
 
 Those can come after the default offer + availability path is proven.
+
+Exception: before paid guaranteed booking goes live, LocalSnow needs a platform-wide cancellation/refund policy. That belongs to the booking/payment/legal slice, not to first provider onboarding as provider-selectable options.
 
 ---
 
@@ -459,5 +482,5 @@ Especially review:
 1. Does the private personal data vs public professional data split match how you want provider onboarding to feel?
 2. When should LocalSnow replace Moli's manual call/text school/provider proof with a stricter proof mechanism?
 3. For generic onboarding routes with no resort context, is asking for one primary resort as the first teaching-area step enough?
-4. Does the offer tag inheritance rule feel right: offer-specific tags override provider-level defaults, and unset offer fields can inherit visible defaults?
-5. Should profiles with structured availability and price still show a secondary request/question path, or should paid guaranteed booking be the only primary action?
+4. Is the cleaner taxonomy split right for v1: broad sports/languages/resort on provider profile, detailed ages/levels/client-fit only on offers?
+5. Is the Stage 5 provider-facing message enough: setup complete, LocalSnow may contact you, reviewed/trustworthy badge comes after checks?
