@@ -13,6 +13,7 @@
 
 	let { data } = $props();
 
+	const providerReadiness = $derived(data.providerReadiness);
 	const currentStep = $derived(data.currentStep);
 	const totalSteps = $derived(data.totalSteps);
 	const isSchool = $derived(data.isSchool);
@@ -22,11 +23,7 @@
 		validators: zodClient(setupBasicsSchema),
 		id: 'basics'
 	});
-	const {
-		form: basicsData,
-		enhance: enhanceBasics,
-		submitting: submittingBasics
-	} = basicsFormObj;
+	const { form: basicsData, enhance: enhanceBasics, submitting: submittingBasics } = basicsFormObj;
 	const profileImageProxy = fileProxy(basicsFormObj, 'profileImage');
 	const qualificationProxy = fileProxy(basicsFormObj, 'qualification');
 
@@ -47,11 +44,7 @@
 		validators: zodClient(setupRateSchema),
 		id: 'rate'
 	});
-	const {
-		form: rateData,
-		enhance: enhanceRate,
-		submitting: submittingRate
-	} = rateFormObj;
+	const { form: rateData, enhance: enhanceRate, submitting: submittingRate } = rateFormObj;
 
 	const steps = $derived(
 		isSchool
@@ -60,22 +53,22 @@
 	);
 
 	const stepTitles = [
-		'Add your contact details',
-		'Where do you teach?',
-		"Set your base rate"
+		'Prepare your profile',
+		'Choose your primary teaching area',
+		'Set your default offer price'
 	];
 	const stepSubtitles = [
-		'Students will use this to reach you directly.',
-		'Choose your home resort and sports.',
-		'Your hourly rate for a private 1-on-1 lesson.'
+		'Private contact plus public professional basics. Proof can come before reviewed status.',
+		'Choose one primary resort and the sports clients can request from you.',
+		'Your starting price for the first requestable lesson.'
 	];
 </script>
 
 <div class="container mx-auto max-w-xl py-8">
 	<!-- Header -->
 	<div class="mb-8 text-center">
-		<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-			<svg class="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<div class="bg-primary/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+			<svg class="text-primary h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path
 					stroke-linecap="round"
 					stroke-linejoin="round"
@@ -85,8 +78,82 @@
 			</svg>
 		</div>
 		<h1 class="title2 mb-1">{stepTitles[currentStep - 1]}</h1>
-		<p class="text-sm text-muted-foreground">{stepSubtitles[currentStep - 1]}</p>
+		<p class="text-muted-foreground text-sm">{stepSubtitles[currentStep - 1]}</p>
 	</div>
+
+	<!-- Provider setup journey -->
+	<section class="border-border bg-card mb-8 rounded-2xl border p-5 shadow-sm">
+		<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+			<div>
+				<p class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+					Provider setup
+				</p>
+				<h2 class="mt-1 text-xl font-semibold">
+					Stage {providerReadiness.currentStageNumber} of {providerReadiness.totalStages} — {providerReadiness.currentStageLabel}
+				</h2>
+				<p class="text-muted-foreground mt-1 text-sm">
+					Build the provider profile step by step: profile, teaching area, default offer,
+					availability, and LocalSnow review.
+				</p>
+			</div>
+			<div class="bg-primary text-primary-foreground rounded-full px-3 py-1 text-sm font-semibold">
+				{providerReadiness.currentLabel}
+			</div>
+		</div>
+
+		<div class="mb-4 grid gap-2 sm:grid-cols-5">
+			{#each providerReadiness.sections as stage (stage.key)}
+				<div
+					class="rounded-xl border px-3 py-2 text-center text-xs font-medium {stage.stageNumber ===
+					providerReadiness.currentStageNumber
+						? 'border-primary bg-primary/10 text-primary'
+						: stage.completed
+							? 'border-green-200 bg-green-50 text-green-700'
+							: 'border-border bg-background text-muted-foreground'}"
+				>
+					<div>Stage {stage.stageNumber}</div>
+					<div class="mt-0.5 truncate">{stage.label}</div>
+				</div>
+			{/each}
+		</div>
+
+		<div class="space-y-2">
+			{#each providerReadiness.sections as section (section.key)}
+				<a
+					href={section.href}
+					class="border-border bg-background hover:bg-muted/50 flex items-start gap-3 rounded-xl border p-3 transition-colors"
+				>
+					<div
+						class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold {section.completed
+							? 'bg-green-600 text-white'
+							: 'bg-muted text-muted-foreground'}"
+					>
+						{section.completed ? '✓' : section.stageNumber}
+					</div>
+					<div class="min-w-0 flex-1">
+						<div class="flex flex-wrap items-center gap-2">
+							<p class="text-sm font-semibold">{section.label}</p>
+							{#if !section.requiredForNextLevel}
+								<span class="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px]"
+									>later</span
+								>
+							{/if}
+						</div>
+						<p class="text-muted-foreground text-xs">{section.description}</p>
+					</div>
+				</a>
+			{/each}
+		</div>
+
+		{#if providerReadiness.nextSection}
+			<div class="bg-primary/10 mt-4 rounded-xl p-3 text-sm">
+				<span class="font-semibold">Next best step:</span>
+				<a class="ml-1 underline underline-offset-2" href={providerReadiness.nextSection.href}>
+					{providerReadiness.nextSection.label}
+				</a>
+			</div>
+		{/if}
+	</section>
 
 	<!-- Step indicator -->
 	<div class="mb-8 flex items-center justify-center">
@@ -106,18 +173,23 @@
 					>
 						{#if isDone}
 							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2.5"
+									d="M5 13l4 4L19 7"
+								/>
 							</svg>
 						{:else}
 							{stepNum}
 						{/if}
 					</div>
-					<span class="text-xs {isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}"
+					<span class="text-xs {isActive ? 'text-foreground font-medium' : 'text-muted-foreground'}"
 						>{step.label}</span
 					>
 				</div>
 				{#if i < steps.length - 1}
-					<div class="mx-3 mb-4 h-px w-10 bg-border"></div>
+					<div class="bg-border mx-3 mb-4 h-px w-10"></div>
 				{/if}
 			</div>
 		{/each}
@@ -133,14 +205,12 @@
 			class="space-y-5"
 		>
 			<!-- Phone -->
-			<div class="grid grid-cols-[1fr_2fr] gap-3 items-end">
+			<div class="grid grid-cols-[1fr_2fr] items-end gap-3">
 				<CountryCodeSelect form={basicsFormObj} name="professionalCountryCode" />
 				<Form.Field form={basicsFormObj} name="professionalPhone">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label
-								>Phone <span class="text-red-500">*</span></Form.Label
-							>
+							<Form.Label>Phone <span class="text-red-500">*</span></Form.Label>
 							<Input
 								{...props}
 								bind:value={$basicsData.professionalPhone}
@@ -159,7 +229,7 @@
 					{#snippet children({ props })}
 						<Form.Label>
 							Bio
-							<span class="ml-1 text-xs text-muted-foreground">(optional)</span>
+							<span class="text-muted-foreground ml-1 text-xs">(optional)</span>
 						</Form.Label>
 						<Textarea
 							{...props}
@@ -178,7 +248,7 @@
 					{#snippet children({ props })}
 						<Form.Label>
 							Profile photo
-							<span class="ml-1 text-xs text-muted-foreground">(optional)</span>
+							<span class="text-muted-foreground ml-1 text-xs">(optional)</span>
 						</Form.Label>
 						<Input
 							{...props}
@@ -192,33 +262,41 @@
 				<Form.FieldErrors />
 			</Form.Field>
 
-			<!-- Qualification certificate (required for verification) -->
-		<Form.Field form={basicsFormObj} name="qualification">
-			<Form.Control>
-				{#snippet children({ props })}
-					<Form.Label>
-						Qualification certificate
-						<span class="ml-1 text-xs font-semibold text-red-600">Required for verification</span>
-					</Form.Label>
-					<Input
-						{...props}
-						type="file"
-						accept="application/pdf"
-						bind:files={$qualificationProxy}
-						class="cursor-pointer"
-					/>
-					<p class="mt-1 text-xs text-muted-foreground">
-						Upload your instructor certification document (PDF, max 10MB)
-					</p>
-				{/snippet}
-			</Form.Control>
-			<Form.FieldErrors />
-		</Form.Field>
+			<!-- Qualification certificate (optional until LocalSnow review) -->
+			<Form.Field form={basicsFormObj} name="qualification">
+				<Form.Control>
+					{#snippet children({ props })}
+						<Form.Label>
+							Qualification certificate
+							<span class="text-muted-foreground ml-1 text-xs">optional now</span>
+						</Form.Label>
+						<Input
+							{...props}
+							type="file"
+							accept="application/pdf"
+							bind:files={$qualificationProxy}
+							class="cursor-pointer"
+						/>
+						<p class="text-muted-foreground mt-1 text-xs">
+							Upload a PDF now if you have it. LocalSnow can ask for proof before
+							reviewed/trustworthy status.
+						</p>
+					{/snippet}
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-		<Button type="submit" class="w-full" size="lg" disabled={$submittingBasics}>
+			<Button type="submit" class="w-full" size="lg" disabled={$submittingBasics}>
 				{#if $submittingBasics}
 					<svg class="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+						<circle
+							class="opacity-25"
+							cx="12"
+							cy="12"
+							r="10"
+							stroke="currentColor"
+							stroke-width="4"
+						/>
 						<path
 							class="opacity-75"
 							fill="currentColor"
@@ -232,14 +310,9 @@
 			</Button>
 		</form>
 
-	<!-- ── STEP 2: Resort + Sports ───────────────────────────────────────── -->
+		<!-- ── STEP 2: Resort + Sports ───────────────────────────────────────── -->
 	{:else if currentStep === 2}
-		<form
-			method="POST"
-			action="?/saveTeaching"
-			use:enhanceTeaching
-			class="space-y-5"
-		>
+		<form method="POST" action="?/saveTeaching" use:enhanceTeaching class="space-y-5">
 			<SearchResort form={teachingFormObj} name="resort" />
 
 			<SportsCheckboxes form={teachingFormObj} name="sports" />
@@ -273,7 +346,7 @@
 			</div>
 		</form>
 
-	<!-- ── STEP 3: Base rate (independent only) ─────────────────────────── -->
+		<!-- ── STEP 3: Base rate (independent only) ─────────────────────────── -->
 	{:else if currentStep === 3}
 		<form method="POST" action="?/saveRate" use:enhanceRate class="space-y-5">
 			<Form.Field form={rateFormObj} name="basePrice">
@@ -294,9 +367,11 @@
 
 			<CurrencySelect form={rateFormObj} name="currency" />
 
-			<p class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
-				This is your base rate for 1–2 students. You can add group pricing, duration packages,
-				and promo codes later from the Lessons page.
+			<p
+				class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200"
+			>
+				This is your base rate for 1–2 students. You can add group pricing, duration packages, and
+				promo codes later from the Lessons page.
 			</p>
 
 			<div class="flex gap-3">
@@ -333,7 +408,7 @@
 	<div class="mt-8 text-center">
 		<a
 			href="/dashboard"
-			class="text-xs text-muted-foreground transition-colors hover:text-foreground"
+			class="text-muted-foreground hover:text-foreground text-xs transition-colors"
 		>
 			Skip for now — I'll finish later
 		</a>
