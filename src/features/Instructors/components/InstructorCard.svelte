@@ -39,11 +39,7 @@
 	const isIndependent = instructorData.role === 'instructor-independent';
 	const instructorSlug = generateInstructorSlug(instructorData.id, instructorData.name, instructorData.lastName);
 	const publicProfile = buildPublicProviderProfile({
-		providerKind: !isIndependent
-			? 'schoolProvider'
-			: instructorData.school
-				? 'schoolAffiliatedInstructor'
-				: 'independent',
+		providerKind: 'schoolAffiliatedInstructor',
 		firstName: instructorData.name,
 		lastName: instructorData.lastName,
 		professionalName: instructorData.school?.name,

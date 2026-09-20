@@ -42,6 +42,20 @@ describe('buildPublicProviderProfile', () => {
 		});
 	});
 
+	it('does not use school name for a school-affiliated instructor public display', () => {
+		expect(
+			buildPublicProviderProfile({
+				providerKind: 'schoolAffiliatedInstructor',
+				firstName: 'Álex',
+				lastName: 'de la Cruz',
+				professionalName: 'Baqueira Snow School'
+			})
+		).toMatchObject({
+			displayName: 'Álex D.',
+			displaySource: 'personal-name-initial'
+		});
+	});
+
 	it('copies languages without exposing mutable source arrays', () => {
 		const languages = ['es', 'en'];
 		const profile = buildPublicProviderProfile({

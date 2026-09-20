@@ -70,7 +70,7 @@
 	})));
 	const defaultAlternate = $derived(alternates.find((alt) => alt.locale === 'en'));
 	const publicProfile = buildPublicProviderProfile({
-		providerKind: !isIndependent ? 'schoolProvider' : school ? 'schoolAffiliatedInstructor' : 'independent',
+		providerKind: 'schoolAffiliatedInstructor',
 		firstName: instructor.name,
 		lastName: instructor.lastName,
 		professionalName: school?.name,
