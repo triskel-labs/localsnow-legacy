@@ -204,6 +204,26 @@
 			enctype="multipart/form-data"
 			class="space-y-5"
 		>
+			<section class="border-border bg-muted/30 rounded-2xl border p-4 text-sm">
+				<p class="font-semibold">Private personal data vs public professional profile</p>
+				<div class="mt-3 grid gap-3 sm:grid-cols-2">
+					<div>
+						<p class="text-xs font-semibold tracking-wide uppercase">Private personal data</p>
+						<p class="text-muted-foreground mt-1 text-xs">
+							Your account name, email, and internal contact details stay for LocalSnow operations
+							and review.
+						</p>
+					</div>
+					<div>
+						<p class="text-xs font-semibold tracking-wide uppercase">Public professional profile</p>
+						<p class="text-muted-foreground mt-1 text-xs">
+							Independent instructors are shown as first name + surname initial. Schools use a
+							separate public school/professional name.
+						</p>
+					</div>
+				</div>
+			</section>
+
 			<!-- Phone -->
 			<div class="grid grid-cols-[1fr_2fr] items-end gap-3">
 				<CountryCodeSelect form={basicsFormObj} name="professionalCountryCode" />

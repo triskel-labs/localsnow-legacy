@@ -21,6 +21,7 @@
 	import { generateInstructorSlug } from '$lib/utils/slug';
 	import { extractLocale, type Locale } from '$lib/i18n/routes';
 	import { getAlternateUrls, route } from '$lib/i18n/routeHelpers';
+	import { buildPublicProviderProfile } from '$src/features/ProviderOnboarding/lib/publicProviderProfile';
 	let { data } = $props();
 	let showContactModal = $state(false);
 	let showProtectedBookingModal = $state(page.url.searchParams.get('openBooking') === 'true');
@@ -68,7 +69,15 @@
 		url: `${PRIMARY_ORIGIN}${alt.url}`
 	})));
 	const defaultAlternate = $derived(alternates.find((alt) => alt.locale === 'en'));
-	const instructorFullName = `${instructor.name} ${instructor.lastName.charAt(0)}.`;
+	const publicProfile = buildPublicProviderProfile({
+		providerKind: !isIndependent ? 'schoolProvider' : school ? 'schoolAffiliatedInstructor' : 'independent',
+		firstName: instructor.name,
+		lastName: instructor.lastName,
+		professionalName: school?.name,
+		languages: instructor.spokenLanguages,
+		profileImageUrl: instructor.profileImageUrl
+	});
+	const instructorFullName = publicProfile.displayName;
 	const instructorImageUrl = instructor.profileImageUrl || 'https://localsnow.org/local-snow-head.png';
 
 	// Create meta description
@@ -294,17 +303,16 @@
 			<Avatar.Root class="size-36 border-2 border-border shadow-sm sm:size-50">
 				<Avatar.Image
 					src={instructor.profileImageUrl || '/local-snow-head.png'}
-					alt={`${instructor.name} ${instructor.lastName.charAt(0)}`}
+					alt={instructorFullName}
 				/>
-				<Avatar.Fallback>{instructor.name[0]}{instructor.lastName[0]}</Avatar.Fallback>
+				<Avatar.Fallback>{instructorFullName[0] ?? 'L'}</Avatar.Fallback>
 			</Avatar.Root>
 
 			<div class="text-center">
 				<div class="flex items-center justify-center gap-2 flex-col-reverse">
 					<div class="flex items-center gap-2">
 						<h1 class="title3">
-							{instructor.name}
-							{instructor.lastName}
+							{instructorFullName}
 						</h1>
 						<VerificationBadge isVerified={instructor.isVerified} size="lg" />
 					</div>
