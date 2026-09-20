@@ -13,6 +13,7 @@
 
 	let { data } = $props();
 
+	const providerReadiness = $derived(data.providerReadiness);
 	const currentStep = $derived(data.currentStep);
 	const totalSteps = $derived(data.totalSteps);
 	const isSchool = $derived(data.isSchool);
@@ -65,9 +66,9 @@
 		"Set your base rate"
 	];
 	const stepSubtitles = [
-		'Students will use this to reach you directly.',
-		'Choose your home resort and sports.',
-		'Your hourly rate for a private 1-on-1 lesson.'
+		'LocalSnow uses these details to verify and prepare your provider profile.',
+		'Choose the resort and sports clients can request from you.',
+		'Your starting price for a private 1-on-1 lesson.'
 	];
 </script>
 
@@ -87,6 +88,76 @@
 		<h1 class="title2 mb-1">{stepTitles[currentStep - 1]}</h1>
 		<p class="text-sm text-muted-foreground">{stepSubtitles[currentStep - 1]}</p>
 	</div>
+
+	<!-- Provider setup journey -->
+	<section class="mb-8 rounded-2xl border border-border bg-card p-5 shadow-sm">
+		<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Provider setup</p>
+				<h2 class="mt-1 text-xl font-semibold">
+					Stage {providerReadiness.currentStageNumber} of {providerReadiness.totalStages} — {providerReadiness.currentStageLabel}
+				</h2>
+				<p class="mt-1 text-sm text-muted-foreground">
+					Build the provider profile step by step: profile, teaching area, default offer,
+					availability, and LocalSnow review.
+				</p>
+			</div>
+			<div class="rounded-full bg-primary px-3 py-1 text-sm font-semibold text-primary-foreground">
+				{providerReadiness.currentLabel}
+			</div>
+		</div>
+
+		<div class="mb-4 grid gap-2 sm:grid-cols-5">
+			{#each providerReadiness.sections as stage (stage.key)}
+				<div
+					class="rounded-xl border px-3 py-2 text-center text-xs font-medium {stage.stageNumber ===
+					providerReadiness.currentStageNumber
+						? 'border-primary bg-primary/10 text-primary'
+						: stage.completed
+							? 'border-green-200 bg-green-50 text-green-700'
+							: 'border-border bg-background text-muted-foreground'}"
+				>
+					<div>Stage {stage.stageNumber}</div>
+					<div class="mt-0.5 truncate">{stage.label}</div>
+				</div>
+			{/each}
+		</div>
+
+		<div class="space-y-2">
+			{#each providerReadiness.sections as section (section.key)}
+				<a
+					href={section.href}
+					class="flex items-start gap-3 rounded-xl border border-border bg-background p-3 transition-colors hover:bg-muted/50"
+				>
+					<div
+						class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold {section.completed
+							? 'bg-green-600 text-white'
+							: 'bg-muted text-muted-foreground'}"
+					>
+						{section.completed ? '✓' : section.stageNumber}
+					</div>
+					<div class="min-w-0 flex-1">
+						<div class="flex flex-wrap items-center gap-2">
+							<p class="text-sm font-semibold">{section.label}</p>
+							{#if !section.requiredForNextLevel}
+								<span class="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">later</span>
+							{/if}
+						</div>
+						<p class="text-xs text-muted-foreground">{section.description}</p>
+					</div>
+				</a>
+			{/each}
+		</div>
+
+		{#if providerReadiness.nextSection}
+			<div class="mt-4 rounded-xl bg-primary/10 p-3 text-sm">
+				<span class="font-semibold">Next best step:</span>
+				<a class="ml-1 underline underline-offset-2" href={providerReadiness.nextSection.href}>
+					{providerReadiness.nextSection.label}
+				</a>
+			</div>
+		{/if}
+	</section>
 
 	<!-- Step indicator -->
 	<div class="mb-8 flex items-center justify-center">

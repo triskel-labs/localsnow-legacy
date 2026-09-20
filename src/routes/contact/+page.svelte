@@ -9,6 +9,7 @@
 	const signupPath = $derived(route('/signup', currentLocale));
 	const instructorsPath = $derived(route('/instructors', currentLocale));
 	const howItWorksPath = $derived(route('/how-it-works', currentLocale));
+	const lessonHelpPath = $derived(route('/secure-lesson', currentLocale));
 	const resortsBase = $derived(route('/resorts', currentLocale));
 	const spainResortsPath = $derived(`${resortsBase}/spain`);
 	const canonicalPath = $derived(route('/contact', currentLocale));
@@ -203,7 +204,7 @@
 			{$t('contact_page_find_button')}
 		</a>
 		<a
-			href="mailto:{contactEmail}"
+			href={lessonHelpPath}
 			class="bg-primary hover:bg-primary/90 mt-3 ml-0 inline-block rounded-md px-6 py-3 font-medium text-white sm:mt-0 sm:ml-3"
 		>
 			{$t('contact_page_client_help_button')}

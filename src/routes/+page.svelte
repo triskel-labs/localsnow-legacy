@@ -330,6 +330,14 @@
 		<p class="text-muted-foreground mx-auto mt-5 max-w-3xl text-center text-sm">
 			{$t(homepageTrustPaths.operatorTruthKey)}
 		</p>
+		<div class="mt-5 text-center">
+			<a
+				href={route('/secure-lesson')}
+				class="bg-primary hover:bg-primary/90 inline-block rounded-md px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
+			>
+				{$t('home_trust_paths_operator_cta')}
+			</a>
+		</div>
 	</div>
 </section>
 
@@ -617,7 +625,7 @@
 	</p>
 	<div class="flex flex-col gap-4 sm:flex-row sm:justify-center">
 		<a
-			href={route('/contact')}
+			href={route('/secure-lesson')}
 			class="bg-primary inline-block rounded-md px-8 py-3 font-semibold text-white shadow-sm transition-all hover:shadow-md"
 		>
 			{$t('home_cta_client_help')}
