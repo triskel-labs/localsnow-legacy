@@ -6,6 +6,8 @@ import { requireDashboardRole } from '$src/lib/utils/dashboardAuth';
 import { InstructorService } from '$src/features/Instructors/lib/instructorService';
 import { UserService } from '$src/features/Users/lib/UserService';
 import { LessonService } from '$src/features/Lessons/lib/lessonService';
+import { WorkingHoursService } from '$src/features/Availability/lib/workingHoursService';
+import { buildProviderReadinessSummary } from '$src/features/ProviderOnboarding/lib/providerReadiness';
 import { StorageService } from '$src/lib/server/R2Storage';
 import { RefillingTokenBucket } from '$src/lib/server/rate-limit';
 import { getClientIP } from '$src/lib/utils/auth';
@@ -14,6 +16,7 @@ import { setupBasicsSchema, setupTeachingSchema, setupRateSchema } from './setup
 const instructorService = new InstructorService();
 const userService = new UserService();
 const lessonService = new LessonService();
+const workingHoursService = new WorkingHoursService();
 const storageService = new StorageService();
 const ipBucket = new RefillingTokenBucket<string>(10, 60);
 
@@ -28,21 +31,39 @@ export const load: PageServerLoad = async (event) => {
 	const urlStep = parseInt(event.url.searchParams.get('step') ?? '0');
 
 	// Fetch current DB state for progress detection and pre-population
-	const [fullUser, instructorData, lessons] = await Promise.all([
+	const [fullUser, instructorData, lessons, hasWorkingHours] = await Promise.all([
 		userService.getUserById(user.id),
 		instructorService.getInstructorWithRelations(user.id),
-		lessonService.listLessonsByInstructor(user.id)
+		lessonService.listLessonsByInstructor(user.id),
+		workingHoursService.hasWorkingHours(user.id)
 	]);
 
 	const baseLesson = lessons.find((l) => l.isBaseLesson) ?? null;
-	const hasPhone = !!(fullUser?.professionalPhone);
-	const hasQualification = !!(fullUser?.qualificationUrl);
+	const hasPhone = !!fullUser?.professionalPhone;
+	const hasQualification = !!fullUser?.qualificationUrl;
 	const hasSports = instructorData.sports.length > 0;
+	const hasResort = instructorData.resorts.length > 0;
 	const hasBaseLesson = !!baseLesson;
+	const providerReadiness = buildProviderReadinessSummary({
+		providerExists: true,
+		providerKind: isSchool ? 'schoolProvider' : 'independent',
+		hasProfessionalPhone: hasPhone,
+		hasQualification,
+		hasSport: hasSports,
+		hasPrimaryResort: hasResort,
+		hasBio: !!(fullUser?.bio && fullUser.bio.trim().length > 10),
+		hasProfilePhoto: !!(
+			fullUser?.profileImageUrl && fullUser.profileImageUrl !== '/local-snow-head.png'
+		),
+		hasLanguages: !!(fullUser?.spokenLanguages && fullUser.spokenLanguages.length > 0),
+		hasDefaultOffer: hasBaseLesson,
+		hasAvailability: hasWorkingHours,
+		hasLocalSnowReview: false
+	});
 
 	// Auto-advance to the right step when no step is in the URL
 	if (urlStep === 0) {
-		if (!hasPhone || !hasQualification) throw redirect(302, '?step=1');
+		if (!hasPhone) throw redirect(302, '?step=1');
 		if (!hasSports) throw redirect(302, '?step=2');
 		if (!isSchool && !hasBaseLesson) throw redirect(302, '?step=3');
 		throw redirect(302, '/dashboard');
@@ -86,7 +107,8 @@ export const load: PageServerLoad = async (event) => {
 		rateForm,
 		isSchool,
 		currentStep,
-		totalSteps
+		totalSteps,
+		providerReadiness
 	};
 };
 
@@ -186,11 +208,7 @@ export const actions: Actions = {
 	},
 
 	saveRate: async (event) => {
-		const user = requireDashboardRole(
-			event,
-			['instructor-independent'],
-			'Session expired.'
-		);
+		const user = requireDashboardRole(event, ['instructor-independent'], 'Session expired.');
 
 		const clientIP = getClientIP(event);
 		if (clientIP !== null && !ipBucket.consume(clientIP, 1)) {

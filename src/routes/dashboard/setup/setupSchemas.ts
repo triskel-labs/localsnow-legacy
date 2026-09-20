@@ -32,7 +32,7 @@ export const setupBasicsSchema = z.object({
 
 /** Step 2 — resort + sports */
 export const setupTeachingSchema = z.object({
-	resort: z.coerce.number().optional(),
+	resort: z.coerce.number().min(1, 'Select one primary resort'),
 	sports: z.array(z.number()).min(1, 'Select at least one sport')
 });
 
