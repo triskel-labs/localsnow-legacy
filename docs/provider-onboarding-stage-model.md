@@ -102,13 +102,13 @@ Optional but useful:
 
 Qualification or credential proof is **optional for submission**. It becomes required for LocalSnow to grant a reviewed/trustworthy profile status or badge.
 
-For schools, LocalSnow still needs a separate proof concept: what proves the person really represents or owns the school is not decided in this slice.
+For now, school/provider proof is manual founder judgment: Moli can call or personally text the provider, speak with them, and decide whether they seem truly connected to the claimed professional identity. A stricter school-proof mechanism is intentionally deferred.
 
 ### Qualification upload direction
 
 Do not block basic onboarding submission on a qualification PDF. Instead:
 
-- Moli can personally verify qualifications by call/email while reviewing the provider;
+- Moli can personally verify qualifications and professional identity by call/text/email while reviewing the provider;
 - the app should later provide a protected, authenticated, rate-limited upload endpoint or dashboard prompt for qualification files;
 - qualification PDFs should be stored in the Cloudflare bucket/R2 document storage path, not chat or email as the final system of record;
 - a provider can remain unreviewed or not receive the reviewed/trustworthy badge until proof is checked.
@@ -151,7 +151,7 @@ Required for early onboarding:
 - sport(s), e.g. ski, snowboard;
 - broad modality/specialty if already clear, e.g. freeride, freestyle, race training.
 
-For now, do **not** allow multiple-resort teaching in the onboarding UI. The primary resort should be automatically prefilled when the onboarding starts from a resort context.
+For now, do **not** allow multiple-resort teaching in the onboarding UI. If onboarding starts from a resort context, the primary resort should be automatically prefilled. If onboarding starts from a generic provider/dashboard route with no resort context, the first teaching-area step should ask for one primary resort instead of pretending it is known.
 
 Later, not now:
 
@@ -296,9 +296,27 @@ structured availability missing or incomplete
 → route it according to the current LocalSnow contact boundary.
 ```
 
-The fallback should feel like: “This instructor does not show exact availability yet, but you can still send a structured request with your dates and lesson details.”
+The fallback should feel like: “This instructor does not show exact availability yet, but you can still send a lesson request with your dates and lesson details.”
 
-Open boundary: if “route directly to the provider” means notifying the provider while LocalSnow keeps the request boundary, it fits current direction. If it means exposing provider contact or bypassing LocalSnow, that would reopen the contact/routing decision and should not be assumed here.
+“Send a request directly” is client-facing shorthand for a direct request about that instructor/offer. Operationally, LocalSnow still routes and tracks the request; it does not expose provider contact or bypass LocalSnow by default.
+
+Use this narrow request/payment display rule until the fuller search/results engine is reviewed:
+
+```text
+no structured availability + no price/offer
+→ show request-only
+
+no structured availability + price/offer exists
+→ show paid guaranteed-booking path plus request path;
+→ paid copy means: if this instructor cannot do it, LocalSnow tries to find a suitable alternative or refunds;
+→ request copy means: send lesson details without exact availability confidence.
+
+structured availability + price/offer exists
+→ show normal paid guaranteed-booking path as primary;
+→ optionally keep request as a secondary question/inquiry path, not as a manipulative upsell trap.
+```
+
+Open copy/design boundary: the exact labels, order, and microcopy for these options need their own UI review. The product truth is that paid booking signals the client wants LocalSnow to make the lesson happen; request signals interest or a question without the same guarantee/commitment.
 
 ### Purpose
 
@@ -411,7 +429,7 @@ Do not block first onboarding on:
 - complete booking workflow;
 - full calendar sync;
 - provider CRM/marketing automation;
-- school ownership/proof workflow beyond marking it as an unresolved review need.
+- automated school ownership/proof workflow.
 
 Those can come after the default offer + availability path is proven.
 
@@ -439,7 +457,7 @@ Please comment directly on this document if you disagree with any assumption.
 Especially review:
 
 1. Does the private personal data vs public professional data split match how you want provider onboarding to feel?
-2. For school providers, what proof is enough to mark the school profile reviewed/trustworthy: business email/domain, website/social proof, phone call, document upload, or something else?
-3. Should the first UI always start from one prefilled resort, with multi-resort teaching fully deferred?
+2. When should LocalSnow replace Moli's manual call/text school/provider proof with a stricter proof mechanism?
+3. For generic onboarding routes with no resort context, is asking for one primary resort as the first teaching-area step enough?
 4. Does the offer tag inheritance rule feel right: offer-specific tags override provider-level defaults, and unset offer fields can inherit visible defaults?
-5. In availability fallback copy, should requests with no structured availability be described as LocalSnow-routed provider notifications, or truly direct-to-provider routing?
+5. Should profiles with structured availability and price still show a secondary request/question path, or should paid guaranteed booking be the only primary action?
