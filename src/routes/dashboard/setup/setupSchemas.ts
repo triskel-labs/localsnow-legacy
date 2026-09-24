@@ -36,9 +36,16 @@ export const setupTeachingSchema = z.object({
 	sports: z.array(z.number()).min(1, 'Select at least one sport')
 });
 
-/** Step 3 — base hourly rate (independent instructors only) */
+/** Step 3 — first requestable/default offer (independent instructors only) */
 export const setupRateSchema = z.object({
-	basePrice: z.coerce.number().int().nonnegative('Price must be 0 or higher'),
+	title: z.string().trim().min(1, 'Name your first offer'),
+	description: z
+		.string()
+		.trim()
+		.min(12, 'Add a short client-facing description')
+		.max(600, 'Keep the first offer description short'),
+	duration: z.string().trim().min(1, 'Choose a duration'),
+	basePrice: z.coerce.number().int().positive('Price must be greater than 0'),
 	currency: z.string().min(1, 'Select currency')
 });
 

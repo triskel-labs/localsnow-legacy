@@ -94,6 +94,9 @@ export const load: PageServerLoad = async (event) => {
 		),
 		superValidate(
 			{
+				title: baseLesson?.title ?? 'Private ski lesson',
+				description: baseLesson?.description ?? '',
+				duration: baseLesson?.duration ?? '2h',
 				basePrice: baseLesson?.basePrice ?? 0,
 				currency: baseLesson?.currency ?? 'EUR'
 			},
@@ -228,9 +231,11 @@ export const actions: Actions = {
 			const sportIds = instructorData.sports;
 
 			const lessonData = {
+				title: form.data.title,
+				description: form.data.description,
 				basePrice: form.data.basePrice,
 				currency: form.data.currency,
-				duration: '1h',
+				duration: form.data.duration,
 				instructorId: user.id,
 				isPublished: true,
 				isBaseLesson: true

@@ -57,12 +57,12 @@
 	const stepTitles = [
 		'Prepare your profile',
 		'Choose your primary teaching area',
-		'Set your default offer price'
+		'Create your default offer'
 	];
 	const stepSubtitles = [
 		'Private contact plus public professional basics. Proof can come before reviewed status.',
 		'Choose one primary resort and the sports clients can request from you.',
-		'Your starting price for the first requestable lesson.'
+		'Turn your first lesson into something a client can understand and request.'
 	];
 </script>
 
@@ -372,32 +372,92 @@
 			</div>
 		</form>
 
-		<!-- ── STEP 3: Base rate (independent only) ─────────────────────────── -->
+		<!-- ── STEP 3: Default offer (independent only) ───────────────────────── -->
 	{:else if currentStep === 3}
 		<form method="POST" action="?/saveRate" use:enhanceRate class="space-y-5">
-			<Form.Field form={rateFormObj} name="basePrice">
+			<section class="border-border bg-muted/30 rounded-2xl border p-4 text-sm">
+				<p class="font-semibold">First requestable lesson</p>
+				<p class="text-muted-foreground mt-1 text-xs leading-relaxed">
+					This creates or updates your default offer using the existing lessons data. Keep it
+					simple: what the client is asking for, the usual session length, and the hourly price.
+				</p>
+			</section>
+
+			<Form.Field form={rateFormObj} name="title">
 				<Form.Control>
 					{#snippet children({ props })}
-						<Form.Label>Hourly rate <span class="text-red-500">*</span></Form.Label>
+						<Form.Label>Offer name <span class="text-red-500">*</span></Form.Label>
 						<Input
 							{...props}
-							type="number"
-							min="0"
-							bind:value={$rateData.basePrice}
-							placeholder="e.g. 60"
+							bind:value={$rateData.title}
+							placeholder="Private ski lesson"
+							autocomplete="off"
 						/>
 					{/snippet}
 				</Form.Control>
 				<Form.FieldErrors />
 			</Form.Field>
 
-			<CurrencySelect form={rateFormObj} name="currency" />
+			<Form.Field form={rateFormObj} name="description">
+				<Form.Control>
+					{#snippet children({ props })}
+						<Form.Label>Client-facing description <span class="text-red-500">*</span></Form.Label>
+						<Textarea
+							{...props}
+							bind:value={$rateData.description}
+							placeholder="For beginner and intermediate skiers who want focused help on piste."
+							rows={4}
+						/>
+						<Form.Description>
+							Say who this first offer is for. You can add packages and finer pricing later.
+						</Form.Description>
+					{/snippet}
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 
-			<p
-				class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200"
-			>
-				This is your base rate for 1–2 students. You can add group pricing, duration packages, and
-				promo codes later from the Lessons page.
+			<div class="grid gap-4 sm:grid-cols-[1fr_1fr_1fr]">
+				<Form.Field form={rateFormObj} name="duration">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>Usual duration <span class="text-red-500">*</span></Form.Label>
+							<Input
+								{...props}
+								bind:value={$rateData.duration}
+								placeholder="2h"
+								autocomplete="off"
+							/>
+						{/snippet}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+
+				<Form.Field form={rateFormObj} name="basePrice">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>Starting hourly price <span class="text-red-500">*</span></Form.Label>
+							<Input
+								{...props}
+								type="number"
+								min="1"
+								bind:value={$rateData.basePrice}
+								placeholder="e.g. 60"
+							/>
+							<Form.Description>
+								This remains an hourly rate. The usual duration above describes the typical session
+								length, not the price unit.
+							</Form.Description>
+						{/snippet}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+
+				<CurrencySelect form={rateFormObj} name="currency" />
+			</div>
+
+			<p class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800">
+				This is enough for LocalSnow to route a real first request. Group pricing, duration
+				packages, and promo codes can stay in the Lessons page until the base offer is clear.
 			</p>
 
 			<div class="flex gap-3">
