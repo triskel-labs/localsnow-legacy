@@ -2,6 +2,7 @@
 	import { superForm, fileProxy } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { setupBasicsSchema, setupTeachingSchema, setupRateSchema } from './setupSchemas';
+	import { buildSetupReviewSurface } from '$src/features/ProviderOnboarding/lib/setupReviewSurface';
 	import Button from '$src/lib/components/ui/button/button.svelte';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
@@ -14,6 +15,7 @@
 	let { data } = $props();
 
 	const providerReadiness = $derived(data.providerReadiness);
+	const setupSurface = $derived(buildSetupReviewSurface(providerReadiness));
 	const currentStep = $derived(data.currentStep);
 	const totalSteps = $derived(data.totalSteps);
 	const isSchool = $derived(data.isSchool);
@@ -82,77 +84,81 @@
 	</div>
 
 	<!-- Provider setup journey -->
-	<section class="border-border bg-card mb-8 rounded-2xl border p-5 shadow-sm">
-		<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-			<div>
-				<p class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-					Provider setup
-				</p>
-				<h2 class="mt-1 text-xl font-semibold">
-					Stage {providerReadiness.currentStageNumber} of {providerReadiness.totalStages} — {providerReadiness.currentStageLabel}
-				</h2>
-				<p class="text-muted-foreground mt-1 text-sm">
-					Build the provider profile step by step: profile, teaching area, default offer,
-					availability, and LocalSnow review.
-				</p>
-			</div>
-			<div class="bg-primary text-primary-foreground rounded-full px-3 py-1 text-sm font-semibold">
-				{providerReadiness.currentLabel}
-			</div>
-		</div>
-
-		<div class="mb-4 grid gap-2 sm:grid-cols-5">
-			{#each providerReadiness.sections as stage (stage.key)}
-				<div
-					class="rounded-xl border px-3 py-2 text-center text-xs font-medium {stage.stageNumber ===
-					providerReadiness.currentStageNumber
-						? 'border-primary bg-primary/10 text-primary'
-						: stage.completed
-							? 'border-green-200 bg-green-50 text-green-700'
-							: 'border-border bg-background text-muted-foreground'}"
-				>
-					<div>Stage {stage.stageNumber}</div>
-					<div class="mt-0.5 truncate">{stage.label}</div>
+	<section class="border-border bg-card mb-8 overflow-hidden rounded-[1.75rem] border shadow-sm">
+		<div class="bg-muted/30 border-border border-b p-5">
+			<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+				<div>
+					<p class="text-primary text-xs font-semibold tracking-wide uppercase">Provider setup</p>
+					<h2 class="mt-1 text-2xl leading-tight font-semibold">{setupSurface.headline}</h2>
+					<p class="text-muted-foreground mt-2 text-sm leading-relaxed">{setupSurface.subtitle}</p>
 				</div>
-			{/each}
+				<div
+					class="bg-primary text-primary-foreground w-fit rounded-full px-3 py-1 text-sm font-semibold"
+				>
+					{setupSurface.primaryCue}
+				</div>
+			</div>
+
+			<div class="space-y-2">
+				<div class="flex items-center justify-between text-xs font-semibold">
+					<span>{setupSurface.progressLabel}</span>
+					<span>{setupSurface.progressPercent}%</span>
+				</div>
+				<div class="bg-background h-2 overflow-hidden rounded-full">
+					<div
+						class="bg-primary h-full rounded-full transition-[width] duration-500"
+						style="width: {setupSurface.progressPercent}%"
+					></div>
+				</div>
+			</div>
 		</div>
 
-		<div class="space-y-2">
-			{#each providerReadiness.sections as section (section.key)}
+		<div class="grid gap-3 p-4">
+			{#each setupSurface.stages as stage (stage.key)}
 				<a
-					href={section.href}
-					class="border-border bg-background hover:bg-muted/50 flex items-start gap-3 rounded-xl border p-3 transition-colors"
+					href={stage.href}
+					class="group flex items-start gap-3 rounded-2xl border p-4 transition-all {stage.state ===
+					'active'
+						? 'border-primary bg-primary/10 shadow-sm'
+						: stage.state === 'complete'
+							? 'border-green-200 bg-green-50'
+							: 'border-border bg-background hover:bg-muted/40'}"
 				>
 					<div
-						class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold {section.completed
+						class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold {stage.state ===
+						'complete'
 							? 'bg-green-600 text-white'
-							: 'bg-muted text-muted-foreground'}"
+							: stage.state === 'active'
+								? 'bg-primary text-primary-foreground'
+								: 'bg-muted text-muted-foreground'}"
 					>
-						{section.completed ? '✓' : section.stageNumber}
+						{stage.state === 'complete' ? '✓' : stage.stageNumber}
 					</div>
 					<div class="min-w-0 flex-1">
 						<div class="flex flex-wrap items-center gap-2">
-							<p class="text-sm font-semibold">{section.label}</p>
-							{#if !section.requiredForNextLevel}
-								<span class="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px]"
-									>later</span
-								>
-							{/if}
+							<p class="font-semibold">{stage.label}</p>
+							<span
+								class="rounded-full px-2 py-0.5 text-[11px] font-semibold {stage.state === 'active'
+									? 'bg-primary text-primary-foreground'
+									: stage.state === 'complete'
+										? 'bg-green-100 text-green-800'
+										: 'bg-muted text-muted-foreground'}"
+							>
+								{stage.stateLabel}
+							</span>
 						</div>
-						<p class="text-muted-foreground text-xs">{section.description}</p>
+						<p class="text-muted-foreground mt-1 text-sm leading-relaxed">{stage.description}</p>
+						<p
+							class="mt-2 text-xs leading-relaxed {stage.state === 'active'
+								? 'text-primary'
+								: 'text-muted-foreground'}"
+						>
+							{stage.mobileCue}
+						</p>
 					</div>
 				</a>
 			{/each}
 		</div>
-
-		{#if providerReadiness.nextSection}
-			<div class="bg-primary/10 mt-4 rounded-xl p-3 text-sm">
-				<span class="font-semibold">Next best step:</span>
-				<a class="ml-1 underline underline-offset-2" href={providerReadiness.nextSection.href}>
-					{providerReadiness.nextSection.label}
-				</a>
-			</div>
-		{/if}
 	</section>
 
 	<!-- Step indicator -->
