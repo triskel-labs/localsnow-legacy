@@ -6,6 +6,7 @@
 	import { generateInstructorSlug } from '$lib/utils/slug';
 	import { t } from '$lib/i18n/i18n';
 	import { page } from '$app/state';
+	import { buildPublicProviderProfile } from '$src/features/ProviderOnboarding/lib/publicProviderProfile';
 	import {
 		getAvailabilityProofInputFromWorkingHours,
 		getAvailabilityProofState,
@@ -37,6 +38,14 @@
 
 	const isIndependent = instructorData.role === 'instructor-independent';
 	const instructorSlug = generateInstructorSlug(instructorData.id, instructorData.name, instructorData.lastName);
+	const publicProfile = buildPublicProviderProfile({
+		providerKind: 'schoolAffiliatedInstructor',
+		firstName: instructorData.name,
+		lastName: instructorData.lastName,
+		professionalName: instructorData.school?.name,
+		languages: instructorData.spokenLanguages,
+		profileImageUrl: instructorData.profileImageUrl
+	});
 
 	// Review stats handling with fallbacks for different data shapes
 	const reviewStats = instructorData.reviewStats || instructorData.review_stats || instructorData.ratingStats || null;
@@ -71,13 +80,13 @@
 		<Avatar.Root class="mt-2 size-24 border border-border sm:size-36">
 			<Avatar.Image
 				src={instructorData.profileImageUrl || '/local-snow-head.png'}
-				alt={`${instructorData.name} ${instructorData.lastName}`}
+				alt={publicProfile.displayName}
 			/>
-			<Avatar.Fallback>{instructorData.name[0]}{instructorData.lastName[0]}</Avatar.Fallback>
+			<Avatar.Fallback>{publicProfile.displayName[0] ?? 'L'}</Avatar.Fallback>
 		</Avatar.Root>
 
 		<div class="flex flex-col gap-1">
-			<p class="title4 py-1 pr-1">{instructorData.name} {instructorData.lastName}</p>
+			<p class="title4 py-1 pr-1">{publicProfile.displayName}</p>
 
 			<!-- Sports Taught -->
 			<div class="sports-that-teach flex flex-row items-center gap-1 flex-wrap">
