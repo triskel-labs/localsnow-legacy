@@ -11,7 +11,16 @@ import { buildProviderReadinessSummary } from '$src/features/ProviderOnboarding/
 import { StorageService } from '$src/lib/server/R2Storage';
 import { RefillingTokenBucket } from '$src/lib/server/rate-limit';
 import { getClientIP } from '$src/lib/utils/auth';
-import { setupBasicsSchema, setupTeachingSchema, setupRateSchema } from './setupSchemas';
+import {
+	setupAvailabilitySchema,
+	setupBasicsSchema,
+	setupTeachingSchema,
+	setupRateSchema
+} from './setupSchemas';
+import {
+	buildWorkingHoursFromSetupAvailability,
+	getDisabledDaysForSetupAvailability
+} from './setupAvailability';
 
 const instructorService = new InstructorService();
 const userService = new UserService();
@@ -31,11 +40,11 @@ export const load: PageServerLoad = async (event) => {
 	const urlStep = parseInt(event.url.searchParams.get('step') ?? '0');
 
 	// Fetch current DB state for progress detection and pre-population
-	const [fullUser, instructorData, lessons, hasWorkingHours] = await Promise.all([
+	const [fullUser, instructorData, lessons, workingHours] = await Promise.all([
 		userService.getUserById(user.id),
 		instructorService.getInstructorWithRelations(user.id),
 		lessonService.listLessonsByInstructor(user.id),
-		workingHoursService.hasWorkingHours(user.id)
+		workingHoursService.getInstructorWorkingHours(user.id)
 	]);
 
 	const baseLesson = lessons.find((l) => l.isBaseLesson) ?? null;
@@ -44,9 +53,10 @@ export const load: PageServerLoad = async (event) => {
 	const hasSports = instructorData.sports.length > 0;
 	const hasResort = instructorData.resorts.length > 0;
 	const hasBaseLesson = !!baseLesson;
+	const hasWorkingHours = workingHours.length > 0;
 	const providerReadiness = buildProviderReadinessSummary({
 		providerExists: true,
-		providerKind: isSchool ? 'schoolProvider' : 'independent',
+		providerKind: isSchool ? 'schoolAffiliatedInstructor' : 'independent',
 		hasProfessionalPhone: hasPhone,
 		hasQualification,
 		hasSport: hasSports,
@@ -66,15 +76,23 @@ export const load: PageServerLoad = async (event) => {
 		if (!hasPhone) throw redirect(302, '?step=1');
 		if (!hasSports) throw redirect(302, '?step=2');
 		if (!isSchool && !hasBaseLesson) throw redirect(302, '?step=3');
+		if (!hasWorkingHours) throw redirect(302, isSchool ? '?step=3' : '?step=4');
 		throw redirect(302, '/dashboard');
 	}
 
 	// Clamp step to valid range
-	const totalSteps = isSchool ? 2 : 3;
+	const totalSteps = isSchool ? 3 : 4;
 	const currentStep = Math.min(Math.max(urlStep, 1), totalSteps);
 
-	// Pre-populate all 3 forms from current DB state
-	const [basicsForm, teachingForm, rateForm] = await Promise.all([
+	const firstWorkingHours = workingHours[0];
+	const availabilityDefaults = {
+		weeklyPattern: inferWeeklyPattern(workingHours),
+		startTime: firstWorkingHours?.startTime ?? '09:00',
+		endTime: firstWorkingHours?.endTime ?? '16:00'
+	};
+
+	// Pre-populate all setup forms from current DB state
+	const [basicsForm, teachingForm, rateForm, availabilityForm] = await Promise.all([
 		superValidate(
 			{
 				professionalCountryCode: fullUser?.professionalCountryCode
@@ -101,19 +119,34 @@ export const load: PageServerLoad = async (event) => {
 				currency: baseLesson?.currency ?? 'EUR'
 			},
 			zod(setupRateSchema)
-		)
+		),
+		superValidate(availabilityDefaults, zod(setupAvailabilitySchema))
 	]);
 
 	return {
 		basicsForm,
 		teachingForm,
 		rateForm,
+		availabilityForm,
 		isSchool,
 		currentStep,
 		totalSteps,
 		providerReadiness
 	};
 };
+
+function inferWeeklyPattern(
+	workingHours: Array<{ dayOfWeek: number }>
+): 'weekdays' | 'weekends' | 'all_days' {
+	const daySet = new Set(workingHours.map((hours) => hours.dayOfWeek));
+	if ([0, 1, 2, 3, 4, 5, 6].every((dayOfWeek) => daySet.has(dayOfWeek))) {
+		return 'all_days';
+	}
+	if ([0, 6].every((dayOfWeek) => daySet.has(dayOfWeek)) && daySet.size === 2) {
+		return 'weekends';
+	}
+	return 'weekdays';
+}
 
 export const actions: Actions = {
 	saveBasics: async (event) => {
@@ -204,9 +237,6 @@ export const actions: Actions = {
 			return fail(500, { form });
 		}
 
-		if (user.role === 'instructor-school') {
-			throw redirect(303, '/dashboard');
-		}
 		throw redirect(303, '?step=3');
 	},
 
@@ -248,6 +278,37 @@ export const actions: Actions = {
 			}
 		} catch (error) {
 			console.error('[Setup] saveRate error:', error);
+			return fail(500, { form });
+		}
+
+		throw redirect(303, '?step=4');
+	},
+
+	saveAvailability: async (event) => {
+		const user = requireDashboardRole(
+			event,
+			['instructor-independent', 'instructor-school'],
+			'Session expired.'
+		);
+
+		const clientIP = getClientIP(event);
+		if (clientIP !== null && !ipBucket.consume(clientIP, 1)) {
+			return fail(429, { message: 'Too many requests. Please try again later.' });
+		}
+
+		const form = await superValidate(event.request, zod(setupAvailabilitySchema));
+		if (!form.valid) return fail(400, { form });
+
+		try {
+			const workingHours = buildWorkingHoursFromSetupAvailability(form.data);
+			const disabledDays = getDisabledDaysForSetupAvailability(form.data);
+
+			await Promise.all(
+				disabledDays.map((dayOfWeek) => workingHoursService.deleteWorkingHours(user.id, dayOfWeek))
+			);
+			await workingHoursService.bulkUpsertWorkingHours(user.id, workingHours);
+		} catch (error) {
+			console.error('[Setup] saveAvailability error:', error);
 			return fail(500, { form });
 		}
 

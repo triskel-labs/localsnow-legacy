@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { superForm, fileProxy } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { setupBasicsSchema, setupTeachingSchema, setupRateSchema } from './setupSchemas';
+	import {
+		setupAvailabilitySchema,
+		setupBasicsSchema,
+		setupTeachingSchema,
+		setupRateSchema
+	} from './setupSchemas';
 	import { buildSetupReviewSurface } from '$src/features/ProviderOnboarding/lib/setupReviewSurface';
 	import Button from '$src/lib/components/ui/button/button.svelte';
 	import * as Form from '$lib/components/ui/form';
@@ -41,29 +46,60 @@
 		submitting: submittingTeaching
 	} = teachingFormObj;
 
-	// ── Step 3: Base rate (independent only) ──────────────────────────────
+	// ── Step 3: Default offer (independent only) ───────────────────────────
 	const rateFormObj = superForm(data.rateForm, {
 		validators: zodClient(setupRateSchema),
 		id: 'rate'
 	});
 	const { form: rateData, enhance: enhanceRate, submitting: submittingRate } = rateFormObj;
 
+	// ── Step 4: Starter weekly availability ───────────────────────────────
+	const availabilityFormObj = superForm(data.availabilityForm, {
+		validators: zodClient(setupAvailabilitySchema),
+		id: 'availability'
+	});
+	const {
+		form: availabilityData,
+		enhance: enhanceAvailability,
+		submitting: submittingAvailability
+	} = availabilityFormObj;
+
+	const availabilityStep = $derived(isSchool ? 3 : 4);
 	const steps = $derived(
 		isSchool
-			? [{ label: 'Contact' }, { label: 'Teaching' }]
-			: [{ label: 'Contact' }, { label: 'Teaching' }, { label: 'Your Rate' }]
+			? [{ label: 'Contact' }, { label: 'Teaching' }, { label: 'Availability' }]
+			: [
+					{ label: 'Contact' },
+					{ label: 'Teaching' },
+					{ label: 'Default offer' },
+					{ label: 'Availability' }
+				]
 	);
 
-	const stepTitles = [
-		'Prepare your profile',
-		'Choose your primary teaching area',
-		'Create your default offer'
-	];
-	const stepSubtitles = [
-		'Private contact plus public professional basics. Proof can come before reviewed status.',
-		'Choose one primary resort and the sports clients can request from you.',
-		'Turn your first lesson into something a client can understand and request.'
-	];
+	const stepTitles = $derived(
+		isSchool
+			? ['Prepare your profile', 'Choose your primary teaching area', 'Set starter availability']
+			: [
+					'Prepare your profile',
+					'Choose your primary teaching area',
+					'Create your default offer',
+					'Set starter availability'
+				]
+	);
+	const stepSubtitles = $derived(
+		isSchool
+			? [
+					'Private contact plus public professional basics. Proof can come before reviewed status.',
+					'Choose one primary resort and the sports clients can request from you.',
+					'Give LocalSnow a simple weekly pattern for routing real requests.'
+				]
+			: [
+					'Private contact plus public professional basics. Proof can come before reviewed status.',
+					'Choose one primary resort and the sports clients can request from you.',
+					'Turn your first lesson into something a client can understand and request.',
+					'Give LocalSnow a simple weekly pattern for routing real requests.'
+				]
+	);
 </script>
 
 <div class="container mx-auto max-w-xl py-8">
@@ -366,7 +402,7 @@
 						</svg>
 						Saving…
 					{:else}
-						{isSchool ? 'Finish ✓' : 'Continue →'}
+						Continue →
 					{/if}
 				</Button>
 			</div>
@@ -483,7 +519,96 @@
 						</svg>
 						Saving…
 					{:else}
-						Finish ✓
+						Continue →
+					{/if}
+				</Button>
+			</div>
+		</form>
+
+		<!-- ── STEP 4: Starter availability ─────────────────────────────────── -->
+	{:else if currentStep === availabilityStep}
+		<form method="POST" action="?/saveAvailability" use:enhanceAvailability class="space-y-5">
+			<section class="border-border bg-muted/30 rounded-2xl border p-4 text-sm">
+				<p class="font-semibold">Starter weekly availability</p>
+				<p class="text-muted-foreground mt-1 text-xs leading-relaxed">
+					This saves real working hours for request routing. Google Calendar can stay optional; this
+					is just the simple weekly pattern LocalSnow needs first.
+				</p>
+			</section>
+
+			<Form.Field form={availabilityFormObj} name="weeklyPattern">
+				<Form.Control>
+					{#snippet children({ props })}
+						<Form.Label>Usual working days <span class="text-red-500">*</span></Form.Label>
+						<select
+							{...props}
+							bind:value={$availabilityData.weeklyPattern}
+							class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							<option value="weekdays">Weekdays · Monday to Friday</option>
+							<option value="weekends">Weekends · Saturday and Sunday</option>
+							<option value="all_days">Every day</option>
+						</select>
+						<Form.Description>
+							Choose the simple pattern clients can request against. Fine day-by-day edits stay in
+							the Availability page.
+						</Form.Description>
+					{/snippet}
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
+
+			<div class="grid gap-4 sm:grid-cols-2">
+				<Form.Field form={availabilityFormObj} name="startTime">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>Start time <span class="text-red-500">*</span></Form.Label>
+							<Input {...props} type="time" bind:value={$availabilityData.startTime} />
+						{/snippet}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+
+				<Form.Field form={availabilityFormObj} name="endTime">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>End time <span class="text-red-500">*</span></Form.Label>
+							<Input {...props} type="time" bind:value={$availabilityData.endTime} />
+						{/snippet}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+			</div>
+
+			<p class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800">
+				LocalSnow can still double-check before confirming a lesson. This step only creates a real
+				availability signal so requests are less blind.
+			</p>
+
+			<div class="flex gap-3">
+				<a href={isSchool ? '?step=2' : '?step=3'} class="flex-1">
+					<Button variant="outline" class="w-full" type="button">← Back</Button>
+				</a>
+				<Button type="submit" class="flex-1" disabled={$submittingAvailability}>
+					{#if $submittingAvailability}
+						<svg class="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+							<circle
+								class="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								stroke-width="4"
+							/>
+							<path
+								class="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+							/>
+						</svg>
+						Saving…
+					{:else}
+						Finish setup ✓
 					{/if}
 				</Button>
 			</div>
