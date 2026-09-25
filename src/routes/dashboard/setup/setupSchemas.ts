@@ -49,6 +49,17 @@ export const setupRateSchema = z.object({
 	currency: z.string().min(1, 'Select currency')
 });
 
+export const setupAvailabilitySchema = z
+	.object({
+		weeklyPattern: z.enum(['weekdays', 'weekends', 'all_days']),
+		startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Choose a start time'),
+		endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Choose an end time')
+	})
+	.refine((data) => data.endTime > data.startTime, {
+		message: 'End time must be after start time'
+	});
+
 export type SetupBasicsSchema = typeof setupBasicsSchema;
 export type SetupTeachingSchema = typeof setupTeachingSchema;
 export type SetupRateSchema = typeof setupRateSchema;
+export type SetupAvailabilitySchema = typeof setupAvailabilitySchema;
