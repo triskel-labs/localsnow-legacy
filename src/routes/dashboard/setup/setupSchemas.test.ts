@@ -57,6 +57,7 @@ describe('setup default offer schema', () => {
 		expect(setupPage).toContain('Starter weekly availability');
 		expect(setupPage).toContain('This saves real working hours');
 		expect(setupPage).toContain('Google Calendar can stay optional');
+		expect(setupPage).toContain('{:else if !isSchool && currentStep === 3}');
 	});
 });
 

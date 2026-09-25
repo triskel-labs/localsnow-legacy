@@ -409,7 +409,7 @@
 		</form>
 
 		<!-- ── STEP 3: Default offer (independent only) ───────────────────────── -->
-	{:else if currentStep === 3}
+	{:else if !isSchool && currentStep === 3}
 		<form method="POST" action="?/saveRate" use:enhanceRate class="space-y-5">
 			<section class="border-border bg-muted/30 rounded-2xl border p-4 text-sm">
 				<p class="font-semibold">First requestable lesson</p>
